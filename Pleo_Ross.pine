@@ -11,26 +11,32 @@ displacement = input(26, minval=1, title="Displacement")
 donchian(len) => avg(lowest(len), highest(len))
 
 //Ichimoku line Logic
-conversionLine = donchian(conversionPeriods)
-baseLine = donchian(basePeriods)
-leadLine1 = avg(conversionLine, baseLine)
+tenkanLine = donchian(conversionPeriods)
+kijunLine = donchian(basePeriods)
+leadLine1 = avg(tenkanLine, kijunLine)
 leadLine2 = donchian(laggingSpan2Periods)
 
 // previous values persistence
 previousTenkan = 0.0
-previousTenkan := nz(conversionLine[1])
+previousTenkan := nz(tenkanLine[1])
 previousKijun = 0.0
-previousKijun := nz(baseLine[1])
+previousKijun := nz(kijunLine[1])
 
 // find where the lines cross
-c = cross(conversionLine, baseLine)
+c = cross(tenkanLine, kijunLine)
 
 //logic for seeing the trend
 isBlueUp = previousTenkan < previousKijun
+weakBuy = c and isBlueUp
+weakSell = c and (not isBlueUp)
+isAboveCloud = open > leadLine1 and open > leadLine2
+isBelowCloud = open < leadLine1 and open < leadLine2
+strongBuy = weakBuy and isAboveCloud
+strongSell = weakSell and isBelowCloud
 
 // plot visuals
-plot(conversionLine, color=blue, linewidth=3, title="Tenkan Line")
-plot(baseLine, color=red, linewidth=3, title="Kijun Line")
+plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
 plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
 
 p1 = plot(leadLine1, offset = displacement, color=white,
@@ -39,9 +45,11 @@ p2 = plot(leadLine2, offset = displacement, color=white,
  title="Lead 2")
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
-plotshape(c, style=shape.flag, location=location.abovebar, color=isBlueUp ? green : red)
+plotshape(weakBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Weak\nBuy")
+plotshape(weakSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Weak\nSell")
+plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy")
+plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell")
+
 
 //create the alert condition
-alertcondition(c, title='conversionLine crosses baseLine', message='baseLine and conversionLine have crossed!')
-
-
+alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
