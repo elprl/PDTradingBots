@@ -54,17 +54,23 @@ plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=r
 //create the alert condition
 //alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
 
+whenDate = year > 2017
+
 if weakBuy
-    strategy.exit("exit", "sell", comment="Close previous sell")
-    strategy.entry("buy", strategy.long, 1, when=year > 2017)
-if weakSell    
-    strategy.exit("exit", "buy", comment="Close previous buy") 
-    strategy.entry("sell", strategy.short, 1, when=year > 2017)
-if strongBuy
-    strategy.exit("exit", "sell", comment="Close previous sell") 
-    strategy.entry("buy", strategy.long, 2, when=year > 2017)
-if strongSell    
-    strategy.exit("exit", "buy", comment="Close previous buy") 
-    strategy.entry("sell", strategy.short, 2, when=year > 2017)
+    strategy.exit("exit", "sell")
+    if strongBuy
+        strategy.entry("buy", strategy.long, 2, when=whenDate)
+        //strategy.exit("exit", "buy", loss=20)
+    else
+        strategy.entry("buy", strategy.long, 1, when=whenDate)
+
+if weakSell
+    strategy.exit("exit", "buy") 
+    if strongSell    
+        strategy.entry("sell", strategy.short, 2, when=whenDate)
+    else
+        strategy.entry("sell", strategy.short, 1, when=whenDate)
+
+
 
 //plot(strategy.equity)
