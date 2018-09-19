@@ -46,26 +46,25 @@ p2 = plot(leadLine2, offset = displacement, color=white,
  title="Lead 2")
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
-plotshape(weakBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Weak\nBuy")
-plotshape(weakSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Weak\nSell")
-plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy")
-plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell")
-
+plotshape(weakBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.small)
+plotshape(weakSell, style=shape.arrowdown, location=location.abovebar, color=red, size=size.small)
+plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy", size=size.large)
+plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell", size=size.large)
 
 //create the alert condition
 //alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
 
 if weakBuy
-    strategy.exit("exit", "sell", comment="Close Sell") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
-    strategy.entry("buy", strategy.long, 10, when=strategy.position_size <= 0)
+    strategy.exit("exit", "sell", comment="Close previous sell")
+    strategy.entry("buy", strategy.long, 1, when=year > 2017)
 if weakSell    
-    strategy.exit("exit", "buy") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
-    strategy.entry("sell", strategy.short, 10, when=strategy.position_size > 0)
+    strategy.exit("exit", "buy", comment="Close previous buy") 
+    strategy.entry("sell", strategy.short, 1, when=year > 2017)
 if strongBuy
-    strategy.exit("exit", "sell", comment="Close Sell") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
-    strategy.entry("buy", strategy.long, 20, when=strategy.position_size <= 0)
+    strategy.exit("exit", "sell", comment="Close previous sell") 
+    strategy.entry("buy", strategy.long, 2, when=year > 2017)
 if strongSell    
-    strategy.exit("exit", "buy") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
-    strategy.entry("sell", strategy.short, 20, when=strategy.position_size > 0)
+    strategy.exit("exit", "buy", comment="Close previous buy") 
+    strategy.entry("sell", strategy.short, 2, when=year > 2017)
 
 //plot(strategy.equity)
