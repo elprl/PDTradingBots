@@ -1,5 +1,6 @@
 //@version=3
-study(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=true)
+//study(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=true)
+strategy("Pleo_Ross BackTest")
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
@@ -29,8 +30,8 @@ c = cross(tenkanLine, kijunLine)
 isBlueUp = previousTenkan < previousKijun
 weakBuy = c and isBlueUp
 weakSell = c and (not isBlueUp)
-isAboveCloud = open > leadLine1 and open > leadLine2
-isBelowCloud = open < leadLine1 and open < leadLine2
+isAboveCloud = close > leadLine1 and close > leadLine2
+isBelowCloud = close < leadLine1 and close < leadLine2
 strongBuy = weakBuy and isAboveCloud
 strongSell = weakSell and isBelowCloud
 
@@ -52,4 +53,19 @@ plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=r
 
 
 //create the alert condition
-alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
+//alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
+
+if weakBuy
+    strategy.exit("exit", "sell", comment="Close Sell") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
+    strategy.entry("buy", strategy.long, 10, when=strategy.position_size <= 0)
+if weakSell    
+    strategy.exit("exit", "buy") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
+    strategy.entry("sell", strategy.short, 10, when=strategy.position_size > 0)
+if strongBuy
+    strategy.exit("exit", "sell", comment="Close Sell") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
+    strategy.entry("buy", strategy.long, 20, when=strategy.position_size <= 0)
+if strongSell    
+    strategy.exit("exit", "buy") // generate full exit bracket (profit 10 points, loss 5 points per contract) from entry with name "long"
+    strategy.entry("sell", strategy.short, 20, when=strategy.position_size > 0)
+
+//plot(strategy.equity)
