@@ -1,5 +1,5 @@
 //@version=3
-//study(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=true)
+// study(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=false)
 strategy("Pleo_Ross BackTest")
 
 //Ichimoku input Logic
@@ -16,6 +16,30 @@ tenkanLine = donchian(conversionPeriods)
 kijunLine = donchian(basePeriods)
 leadLine1 = avg(tenkanLine, kijunLine)
 leadLine2 = donchian(laggingSpan2Periods)
+
+// store state of open position (whether long or short)
+lastOpenPosition = 0.0
+lastOpenPosition := lastOpenPosition[1]
+
+//
+//--Modified vyacheslav.shindin-------------------------------------------------//           Signal 1
+//Configured ema signal output
+slow = 8
+fast = 5
+vh1 = ema(highest(avg(low, close), fast), 5)
+vl1 = ema(lowest(avg(high, close), slow), 8)
+//
+e_ema1 = ema(close, 1)
+e_ema2 = ema(e_ema1, 1)
+e_ema3 = ema(e_ema2, 1)
+tema = 1 * (e_ema1 - e_ema2) + e_ema3
+//
+e_e1 = ema(close, 8)
+e_e2 = ema(e_e1, 5)
+dema = 2 * e_e1 - e_e2
+signal = tema > dema ? max(vh1, vl1) : min(vh1, vl1)
+isSellExit = tema > dema and signal > low and (signal-signal[1] > signal[1]-signal[2]) and lastOpenPosition[1] < 0
+isBuyExit = tema < dema and signal < high and (signal[1]-signal > signal[2]-signal[1]) and lastOpenPosition[1] > 0
 
 // previous values persistence
 previousTenkan = 0.0
@@ -36,39 +60,54 @@ strongBuy = weakBuy and isAboveCloud
 strongSell = weakSell and isBelowCloud
 
 // plot visuals
-plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
-plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
+// plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+// plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+plot(close)//, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
 
-p1 = plot(leadLine1, offset = displacement, color=white,
- title="Lead 1")
-p2 = plot(leadLine2, offset = displacement, color=white, 
- title="Lead 2")
-fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+// p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+// p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+// fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
+// Opening positions
 plotshape(weakBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.small)
 plotshape(weakSell, style=shape.arrowdown, location=location.abovebar, color=red, size=size.small)
 plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy", size=size.large)
 plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell", size=size.large)
+
+// Closing positions 
+plotchar(isBuyExit ? 1 : na, title="EXIT BUY", color=green, char='⊢', location=location.abovebar, size=size.tiny)
+plotchar(isSellExit ? -1 : na, title="EXIT SELL", color=red, char='⊢', location=location.belowbar, size=size.tiny)
 
 //create the alert condition
 //alertcondition(c, title='tenkanLine crosses kijunLine', message='kijunLine and tenkanLine have crossed!')
 
 whenDate = year > 2017
 
+if isSellExit
+    strategy.close("sell")
+    lastOpenPosition := 0
+
+if isBuyExit
+    strategy.close("buy") 
+    lastOpenPosition := 0
+
+
 if weakBuy
-    strategy.exit("exit", "sell")
+    strategy.close("sell")
     if strongBuy
+        lastOpenPosition := 2
         strategy.entry("buy", strategy.long, 2, when=whenDate)
-        //strategy.exit("exit", "buy", loss=20)
     else
+        lastOpenPosition := 1
         strategy.entry("buy", strategy.long, 1, when=whenDate)
 
 if weakSell
-    strategy.exit("exit", "buy") 
+    strategy.close("buy") 
     if strongSell    
+        lastOpenPosition := -2
         strategy.entry("sell", strategy.short, 2, when=whenDate)
     else
+        lastOpenPosition := -1
         strategy.entry("sell", strategy.short, 1, when=whenDate)
 
 
