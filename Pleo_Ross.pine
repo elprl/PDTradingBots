@@ -54,10 +54,10 @@ plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=gree
 plotshape(weakSell and not strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Weak\nSell", size=size.small)
 plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell", size=size.large)
 
-hasPreviousBuy = lastOpenPosition[1] > 0
-hasPreviousSell = lastOpenPosition[1] < 0
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
 
-if (weakBuy and not hasPreviousBuy)
+if (weakBuy and not inPreviousBuy)
     strategy.close("sell")
     if strongBuy
         lastOpenPosition := 2
@@ -66,7 +66,7 @@ if (weakBuy and not hasPreviousBuy)
         lastOpenPosition := 1
         strategy.entry("buy", strategy.long, 1)
 
-if (weakSell and not hasPreviousSell)
+if (weakSell and not inPreviousSell)
     strategy.close("buy") 
     if strongSell    
         lastOpenPosition := -2
