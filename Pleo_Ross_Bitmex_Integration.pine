@@ -48,20 +48,20 @@ plot(close)//, offset = -displacement, color=green, linewidth=2, title="Chikou L
 // p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
 // fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
+
 // Opening positions
 plotshape(weakBuy and not strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Weak\nBuy", size=size.small)
 plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy", size=size.large)
 plotshape(weakSell and not strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Weak\nSell", size=size.small)
 plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell", size=size.large)
 
-inPreviousBuy = lastOpenPosition[1] > 0
-inPreviousSell = lastOpenPosition[1] < 0
-
 //Alert conditions
-alertcondition(strongBuy, title='Strong Buy', message='Close previous sell order and Strong buy condition')
-alertcondition(weakBuy and not strongBuy, title='Weak Buy', message='Close previous sell order and Weak buy condition')
-alertcondition(strongSell, title='Strong Sell', message='Close previous buy order and Strong sell condition')
-alertcondition(weakSell and not strongSell, title='Weak Sell', message='Close previous buy order and Weak sell condition')
+alertcondition(strongBuy and not inPreviousBuy, title='Strong Buy', message='Close previous sell order and Strong buy condition')
+alertcondition(weakBuy and not strongBuy and not inPreviousBuy, title='Weak Buy', message='Close previous sell order and Weak buy condition')
+alertcondition(strongSell and not inPreviousSell, title='Strong Sell', message='Close previous buy order and Strong sell condition')
+alertcondition(weakSell and not strongSell and not inPreviousSell, title='Weak Sell', message='Close previous buy order and Weak sell condition')
 
 if (weakBuy and not inPreviousBuy)
     //strategy.close("sell")
