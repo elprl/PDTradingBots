@@ -1,6 +1,6 @@
 //@version=3
 // study(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=false)
-strategy("Pleo_Ross BackTest")
+strategy(title="Pleo_Ross Ichimoku Cloud", shorttitle="Pleo", overlay=false)
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
