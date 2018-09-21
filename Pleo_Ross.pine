@@ -17,6 +17,14 @@ kijunLine = donchian(basePeriods)
 leadLine1 = avg(tenkanLine, kijunLine)
 leadLine2 = donchian(laggingSpan2Periods)
 
+// Plot Ichimoku Cloud
+plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
+p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+
 // store state of open position (whether long or short)
 lastOpenPosition = 0.0
 lastOpenPosition := lastOpenPosition[1]
@@ -24,46 +32,41 @@ lastOpenPosition := lastOpenPosition[1]
 // find where the lines cross
 weakBuy = crossover(tenkanLine, kijunLine)
 weakSell = crossunder(tenkanLine, kijunLine)
-isAboveCloud = close > leadLine1 and close > leadLine2
-isBelowCloud = close < leadLine1 and close < leadLine2
+isAboveCloud = close > leadLine1[displacement] and close > leadLine2[displacement]
+isBelowCloud = close < leadLine1[displacement] and close < leadLine2[displacement]
 strongBuy = weakBuy and isAboveCloud
 strongSell = weakSell and isBelowCloud
 
-// plot visuals
-// plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
-// plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-plot(close)//, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
-//plot(lastOpenPosition)
-// p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
-// p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
-// fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+
 
 // Opening positions
-plotshape(weakBuy and not strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Weak\nBuy", size=size.small)
-plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, text="Strong\nBuy", size=size.large)
-plotshape(weakSell and not strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Weak\nSell", size=size.small)
-plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, text="Strong\nSell", size=size.large)
+plotshape(weakBuy and not strongBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.small)
+plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.large)
+plotshape(weakSell and not strongSell, style=shape.arrowdown, location=location.abovebar, color=red, size=size.small)
+plotshape(strongSell, style=shape.arrowdown, location=location.abovebar, color=red, size=size.large)
 
 inPreviousBuy = lastOpenPosition[1] > 0
 inPreviousSell = lastOpenPosition[1] < 0
 
 if (weakBuy and not inPreviousBuy)
-    strategy.close("sell")
+    strategy.close("STRONG SELL")
+    strategy.close("weak sell")
     if strongBuy
         lastOpenPosition := 2
-        strategy.entry("buy", strategy.long, 2)
+        strategy.entry("STRONG BUY", strategy.long, 2)
     else
         lastOpenPosition := 1
-        strategy.entry("buy", strategy.long, 1)
+        strategy.entry("weak buy", strategy.long, 1)
 
 if (weakSell and not inPreviousSell)
-    strategy.close("buy") 
+    strategy.close("STRONG BUY") 
+    strategy.close("weak buy") 
     if strongSell    
         lastOpenPosition := -2
-        strategy.entry("sell", strategy.short, 2)
+        strategy.entry("STRONG SELL", strategy.short, 2)
     else
         lastOpenPosition := -1
-        strategy.entry("sell", strategy.short, 1)
+        strategy.entry("weak sell", strategy.short, 1)
 
 
 ////////////////////
