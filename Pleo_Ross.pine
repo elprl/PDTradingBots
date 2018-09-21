@@ -37,8 +37,6 @@ isBelowCloud = close < leadLine1[displacement] and close < leadLine2[displacemen
 strongBuy = weakBuy and isAboveCloud
 strongSell = weakSell and isBelowCloud
 
-
-
 // Opening positions
 plotshape(weakBuy and not strongBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.small)
 plotshape(strongBuy, style=shape.arrowup, location=location.belowbar, color=green, size=size.large)
@@ -49,24 +47,22 @@ inPreviousBuy = lastOpenPosition[1] > 0
 inPreviousSell = lastOpenPosition[1] < 0
 
 if (weakBuy and not inPreviousBuy)
-    strategy.close("STRONG SELL")
-    strategy.close("weak sell")
+    strategy.close("sell")
     if strongBuy
         lastOpenPosition := 2
-        strategy.entry("STRONG BUY", strategy.long, 2)
+        strategy.entry("buy", strategy.long, 2)
     else
         lastOpenPosition := 1
-        strategy.entry("weak buy", strategy.long, 1)
+        strategy.entry("buy", strategy.long, 1)
 
 if (weakSell and not inPreviousSell)
-    strategy.close("STRONG BUY") 
-    strategy.close("weak buy") 
+    strategy.close("buy") 
     if strongSell    
         lastOpenPosition := -2
-        strategy.entry("STRONG SELL", strategy.short, 2)
+        strategy.entry("sell", strategy.short, 2)
     else
         lastOpenPosition := -1
-        strategy.entry("weak sell", strategy.short, 1)
+        strategy.entry("sell", strategy.short, 1)
 
 
 ////////////////////
