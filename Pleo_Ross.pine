@@ -21,19 +21,9 @@ leadLine2 = donchian(laggingSpan2Periods)
 lastOpenPosition = 0.0
 lastOpenPosition := lastOpenPosition[1]
 
-// previous values persistence
-previousTenkan = 0.0
-previousTenkan := nz(tenkanLine[1])
-previousKijun = 0.0
-previousKijun := nz(kijunLine[1])
-
 // find where the lines cross
-c = cross(tenkanLine, kijunLine)
-
-//logic for seeing the trend
-isBlueUp = previousTenkan < previousKijun
-weakBuy = c and isBlueUp
-weakSell = c and (not isBlueUp)
+weakBuy = crossover(tenkanLine, kijunLine)
+weakSell = crossunder(tenkanLine, kijunLine)
 isAboveCloud = close > leadLine1 and close > leadLine2
 isBelowCloud = close < leadLine1 and close < leadLine2
 strongBuy = weakBuy and isAboveCloud
@@ -74,3 +64,28 @@ if (weakSell and not inPreviousSell)
     else
         lastOpenPosition := -1
         strategy.entry("sell", strategy.short, 1)
+
+
+////////////////////
+// RSI LOGIC
+/////////////////////
+rSILength = input(14,title="RSI Period Length") 
+rSIOverSoldLevel = input(30, title="RSI oversold level")
+rSIOverBoughtLevel = input(70, title="RSI overbought level")
+price = close
+vrsi = rsi(price, rSILength)
+// isOverSold = (not na(vrsi)) and crossover(vrsi, rSIOverSoldLevel)
+// isOverBought = (not na(vrsi)) and crossunder(vrsi, rSIOverBoughtLevel)
+isOverSold = (not na(vrsi)) and vrsi <= rSIOverSoldLevel
+isOverBought = (not na(vrsi)) and vrsi >= rSIOverBoughtLevel
+plotchar(isOverBought, char='b', location=location.top, color=green)
+plotchar(isOverSold, char='s', location=location.bottom, color=red)
+// plot(vrsi, color= isOverBought or isOverSold ? blue : purple)
+// hline(100, title="Max Line", linestyle=solid, linewidth=1, color=gray)
+// hline(0, title="Min Line", linestyle=solid, linewidth=1, color=gray)
+// bandTop = hline(rSIOverSoldLevel, title="Upper Line", linestyle=dashed, linewidth=1, color=gray, transp=90)
+// bandBot = hline(rSIOverBoughtLevel, title="Lower Line", linestyle=dashed, linewidth=1, color=gray, transp=90)
+// fill(bandTop, bandBot, color=purple, transp=90)
+////////////////////
+// END RSI LOGIC
+/////////////////////
