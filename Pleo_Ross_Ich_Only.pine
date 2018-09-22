@@ -38,7 +38,7 @@ leadLine2 = donchian(laggingSpan2Periods)
 // Plot Ichimoku Cloud
 plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
 plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
+//plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
 p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
 p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
@@ -47,16 +47,19 @@ isAggressiveStrategy = input(true, title="Use aggressive closing of positions")
 // store state of open position (whether long or short)
 lastOpenPosition = 0.0
 lastOpenPosition := lastOpenPosition[1]
+price = 0.0
+price := na
 
 // Logic for open positions
-isBuySignal = crossover(tenkanLine, kijunLine)
-isSellSignal = crossunder(tenkanLine, kijunLine)
+isBuySignal = crossover(tenkanLine, kijunLine) and leadLine1 > leadLine2
+isSellSignal = crossunder(tenkanLine, kijunLine) and leadLine1 < leadLine2
 isAboveCloud = close > leadLine1[displacement] and close > leadLine2[displacement]
 isBelowCloud = close < leadLine1[displacement] and close < leadLine2[displacement]
 strongBuy = isBuySignal and isAboveCloud
 strongSell = isSellSignal and isBelowCloud
 
 // Logic for exit positions
+inOpenPosition = lastOpenPosition[1] != 0
 inPreviousBuy = lastOpenPosition[1] > 0
 inPreviousSell = lastOpenPosition[1] < 0
 isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
@@ -77,12 +80,15 @@ plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red,
 if isBuyExit
     strategy.close("buy")
     lastOpenPosition := 0
+    price := close
 
 if isSellExit
     strategy.close("sell")
     lastOpenPosition := 0
+    price := close
 
-if (weakBuy and not inPreviousBuy)
+if (isBuySignal and not inPreviousBuy)
+    price := close
     if strongBuy
         lastOpenPosition := 2
         strategy.entry("buy", strategy.long, 2, comment="Strong buy")
@@ -90,7 +96,9 @@ if (weakBuy and not inPreviousBuy)
         lastOpenPosition := 1
         strategy.entry("buy", strategy.long, 1, comment="Weak buy")
 
-if (weakSell and not inPreviousSell)
+
+if (isSellSignal and not inPreviousSell)
+    price := close
     if strongSell    
         lastOpenPosition := -2
         strategy.entry("sell", strategy.short, 2, comment="Strong sell")
@@ -98,3 +106,5 @@ if (weakSell and not inPreviousSell)
         lastOpenPosition := -1
         strategy.entry("sell", strategy.short, 1, comment="Weak sell")
 
+// Visualise price change for open positions
+plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
