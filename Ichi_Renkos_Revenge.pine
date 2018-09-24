@@ -77,8 +77,11 @@ inPreviousBuy = lastOpenPosition[1] > 0
 inPreviousSell = lastOpenPosition[1] < 0
 isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
 isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
-isBuyExit = inPreviousBuy and ( (isAggressiveStrategy ? crossunder(close, kijunLine) : isBelowAllLines) or isSellSignal or isRenkoSellEntry )
-isSellExit = inPreviousSell and ( (isAggressiveStrategy ? crossover(close, kijunLine) : isAboveAllLines) or isBuySignal or isRenkoBuyEntry )
+// isBuyExit = inPreviousBuy and ( (isAggressiveStrategy ? crossunder(close, kijunLine) : isBelowAllLines) or isSellSignal or isRenkoSellEntry )
+// isSellExit = inPreviousSell and ( (isAggressiveStrategy ? crossover(close, kijunLine) : isAboveAllLines) or isBuySignal or isRenkoBuyEntry )
+// renko only exits
+isBuyExit = inPreviousBuy and isRenkoSellEntry 
+isSellExit = inPreviousSell and isRenkoBuyEntry
 
 // Visualise the Opening positions
 plotshape(isBuySignal and not strongBuy, style=shape.arrowup, location=location.abovebar, color=green, size=size.small)
@@ -123,3 +126,5 @@ if (isSellSignal and not inPreviousSell)
 
 // Visualise price change for open positions
 plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
+bgcolor(inPreviousBuy ? green : na, transp=70)
+bgcolor(inPreviousSell ? red : na, transp=70)
