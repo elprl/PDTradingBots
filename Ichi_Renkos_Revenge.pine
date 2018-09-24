@@ -9,7 +9,8 @@
 //      a) price has touched the cloud again, OR
 //      b) open sell position mentioned below in 3., OR
 //      c) price crosses below the kijun line (aggressive), OR
-//      d) price crosses below all 4 lines (conservative)
+//      d) price crosses below all 4 lines (conservative), OR
+//      e) renko sell signal seen
 // 3. Open sell position when:
 //      a) tenkan/kijun lines crossunder, AND
 //      b) current price is below the red cloud
@@ -17,7 +18,8 @@
 //      a) price has touched the cloud again, OR
 //      b) open buy position mentioned below in 1., OR
 //      c) price crosses above the kijun line (aggressive), OR
-//      d) price crosses above all 4 lines (conservative)
+//      d) price crosses above all 4 lines (conservative), OR
+//      e) renko buy signal seen
 
 strategy(title="Ichimoku Renko Revenge V1", shorttitle="Ichi_RenkoV1", overlay=true)
 
