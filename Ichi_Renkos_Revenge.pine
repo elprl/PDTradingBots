@@ -1,0 +1,123 @@
+
+//@version=3
+// HIGH LEVEL STRATEGY
+// Based on logic described here - https://www.youtube.com/watch?v=sghyPtOimXQ
+// 1. Open buy position when: 
+//      a) tenkan/kijun lines crossover, AND 
+//      b) current price is above the green cloud
+// 2. Exit previous buy position when:
+//      a) price has touched the cloud again, OR
+//      b) open sell position mentioned below in 3., OR
+//      c) price crosses below the kijun line (aggressive), OR
+//      d) price crosses below all 4 lines (conservative)
+// 3. Open sell position when:
+//      a) tenkan/kijun lines crossunder, AND
+//      b) current price is below the red cloud
+// 4. Exit previous sell position when:
+//      a) price has touched the cloud again, OR
+//      b) open buy position mentioned below in 1., OR
+//      c) price crosses above the kijun line (aggressive), OR
+//      d) price crosses above all 4 lines (conservative)
+
+strategy(title="Ichimoku Renko Revenge V1", shorttitle="Ichi_RenkoV1", overlay=true)
+
+//Ichimoku input Logic
+conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
+basePeriods = input(26, minval=1, title="Base Line Periods")
+laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
+displacement = input(26, minval=1, title="Displacement")
+
+//Ichimoku function Logic
+donchian(len) => avg(lowest(len), highest(len))
+
+//Ichimoku line Logic
+tenkanLine = donchian(conversionPeriods)
+kijunLine = donchian(basePeriods)
+leadLine1 = avg(tenkanLine, kijunLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+// Plot Ichimoku Cloud
+plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+//plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
+p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+
+isAggressiveStrategy = input(true, title="Use aggressive closing of positions")
+// store state of open position (whether long or short)
+lastOpenPosition = 0.0
+lastOpenPosition := lastOpenPosition[1]
+price = 0.0
+price := na
+
+//////////////
+// RENKO LOGIC
+//////////////
+//Entry/exit just after 1 RENKO BRICKS
+isRenkoBuyEntry = close > open[1] and close[1] < open[2]
+isRenkoSellEntry = close < open[1] and close[1] > open[2]
+//Entry/exit just after 2 RENKO BRICKS
+//isRenkoBuyEntry = open[0] > open[1] and open[0] > open[2]
+//isRenkoSellEntry = open[0] < open[1] and open[0] < open[2]
+
+// Logic for open positions
+isBuySignal = crossover(tenkanLine, kijunLine) and leadLine1 > leadLine2
+isSellSignal = crossunder(tenkanLine, kijunLine) and leadLine1 < leadLine2
+isAboveCloud = close > leadLine1[displacement] and close > leadLine2[displacement]
+isBelowCloud = close < leadLine1[displacement] and close < leadLine2[displacement]
+strongBuy = isBuySignal and isAboveCloud
+strongSell = isSellSignal and isBelowCloud
+
+// Logic for exit positions
+inOpenPosition = lastOpenPosition[1] != 0
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
+isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
+isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
+isBuyExit = inPreviousBuy and ( (isAggressiveStrategy ? crossunder(close, kijunLine) : isBelowAllLines) or isSellSignal or isRenkoSellEntry )
+isSellExit = inPreviousSell and ( (isAggressiveStrategy ? crossover(close, kijunLine) : isAboveAllLines) or isBuySignal or isRenkoBuyEntry )
+
+// Visualise the Opening positions
+plotshape(isBuySignal and not strongBuy, style=shape.arrowup, location=location.abovebar, color=green, size=size.small)
+plotshape(strongBuy, style=shape.arrowup, location=location.abovebar, color=green, size=size.large)
+plotshape(isSellSignal and not strongSell, style=shape.arrowdown, location=location.belowbar, color=red, size=size.small)
+plotshape(strongSell, style=shape.arrowdown, location=location.belowbar, color=red, size=size.large)
+// Visualise the Exit positions
+plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
+plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
+// Visualise Renko Exit Positions
+plotshape(isRenkoBuyEntry, style=shape.diamond, location=location.abovebar, color=green, size=size.tiny, text="rb")
+plotshape(isRenkoSellEntry, style=shape.diamond, location=location.belowbar, color=red, size=size.tiny, text="rs")
+
+if isBuyExit
+    strategy.close("buy")
+    lastOpenPosition := 0
+    price := close
+
+if isSellExit
+    strategy.close("sell")
+    lastOpenPosition := 0
+    price := close
+
+if (isBuySignal and not inPreviousBuy)
+    price := close
+    if strongBuy
+        lastOpenPosition := 2
+        strategy.entry("buy", strategy.long, 2, comment="Strong buy")
+    else
+        lastOpenPosition := 1
+        strategy.entry("buy", strategy.long, 1, comment="Weak buy")
+
+
+if (isSellSignal and not inPreviousSell)
+    price := close
+    if strongSell    
+        lastOpenPosition := -2
+        strategy.entry("sell", strategy.short, 2, comment="Strong sell")
+    else
+        lastOpenPosition := -1
+        strategy.entry("sell", strategy.short, 1, comment="Weak sell")
+
+// Visualise price change for open positions
+plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
