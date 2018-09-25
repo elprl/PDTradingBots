@@ -57,13 +57,13 @@ isBuySignal = crossover(tenkanLine, kijunLine)
 isSellSignal = crossunder(tenkanLine, kijunLine)
 isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
 isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
+isChikouAbovePrice = open > open[displacement]
+isStrongBuySignal = isBuySignal and isAboveCloud and isChikouAbovePrice
+isStrongSellSignal = isSellSignal and isBelowCloud and not isChikouAbovePrice
 isWeakBuySignal = isBuySignal and isBelowCloud
 isWeakSellSignal = isSellSignal and isAboveCloud
-isMediumSellSignal = isSellSignal and not isBelowCloud and not isAboveCloud
-isMediumBuySignal = isBuySignal and not isBelowCloud and not isAboveCloud
-isChikouAbovePrice = open > open[displacement]
-isStrongBuySignal = isBuySignal and isAboveCloud
-isStrongSellSignal = isSellSignal and isBelowCloud
+isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or (isSellSignal and isBelowCloud and isChikouAbovePrice)
+isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and not isChikouAbovePrice)
 
 // Logic for exit positions
 inOpenPosition = lastOpenPosition[1] != 0
@@ -73,7 +73,6 @@ isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine
 isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
 isBuyExit = inPreviousBuy and ( (isAggressiveStrategy ? crossunder(close, kijunLine) : isBelowAllLines) or isSellSignal )
 isSellExit = inPreviousSell and ( (isAggressiveStrategy ? crossover(close, kijunLine) : isAboveAllLines) or isBuySignal )
-
 
 // Visualise the Opening positions
 plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.small, text="wb")
@@ -86,34 +85,46 @@ plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar,
 plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
 plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
 
-// if isBuyExit
-//     strategy.close("buy")
-//     lastOpenPosition := 0
-//     price := close
+if isBuyExit
+    strategy.close("buy")
+    lastOpenPosition := 0
+    price := close
 
-// if isSellExit
-//     strategy.close("sell")
-//     lastOpenPosition := 0
-//     price := close
+if isSellExit
+    strategy.close("sell")
+    lastOpenPosition := 0
+    price := close
 
-// if (isBuySignal and not inPreviousBuy)
-//     price := close
-//     if isStrongBuySignal
-//         lastOpenPosition := 2
-//         strategy.entry("buy", strategy.long, 2, comment="Strong buy")
-//     else
-//         lastOpenPosition := 1
-//         strategy.entry("buy", strategy.long, 1, comment="Weak buy")
+if (isBuySignal and not inPreviousBuy)
+    //strategy.close("sell")
+    price := close
+    if isStrongBuySignal
+        lastOpenPosition := 3
+        strategy.entry("buy", strategy.long, 3, comment="Strong buy")        
+    else
+        if isMediumBuySignal
+            lastOpenPosition := 2
+            strategy.entry("buy", strategy.long, 2, comment="Medium buy")
+        else
+            if isWeakBuySignal
+                lastOpenPosition := 1
+                strategy.entry("buy", strategy.long, 1, comment="Weak buy")
 
 
-// if (isSellSignal and not inPreviousSell)
-//     price := close
-//     if isStrongSellSignal    
-//         lastOpenPosition := -2
-//         strategy.entry("sell", strategy.short, 2, comment="Strong sell")
-//     else
-//         lastOpenPosition := -1
-//         strategy.entry("sell", strategy.short, 1, comment="Weak sell")
+if (isSellSignal and not inPreviousSell)
+    //strategy.close("buy")
+    price := close
+    if isStrongSellSignal    
+        lastOpenPosition := -3
+        strategy.entry("sell", strategy.short, 3, comment="Strong sell")
+    else
+        if isMediumSellSignal    
+            lastOpenPosition := -2
+            strategy.entry("sell", strategy.short, 2, comment="Medium sell")
+        else
+            if isStrongSellSignal    
+                lastOpenPosition := -1
+                strategy.entry("sell", strategy.short, 1, comment="Weak sell")
 
 // Visualise price change for open positions
 plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
