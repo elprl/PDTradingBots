@@ -40,30 +40,38 @@ leadLine2 = donchian(laggingSpan2Periods)
 // Plot Ichimoku Cloud
 plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
 plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
+//plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
 p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
 p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
-isAggressiveStrategy = input(true, title="Use aggressive closing of positions")
+isAggressiveStrategy = input(false, title="Use aggressive closing of positions")
 // store state of open position (whether long or short)
 lastOpenPosition = 0.0
 lastOpenPosition := lastOpenPosition[1]
 price = 0.0
 price := na
 
+// Chikou Logic
+isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
+isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
+isChikouAboveCloud = high > leadLine1[displacement * 2] and high > leadLine2[displacement * 2]
+isChikouBelowCloud = low < leadLine1[displacement * 2] and low < leadLine2[displacement * 2]
+isChikouAboveAllLines = isChikouAboveCloud and high > tenkanLine[displacement] and high > kijunLine[displacement] 
+isChikouBelowAllLines = isChikouBelowCloud and low < tenkanLine[displacement] and low < kijunLine[displacement] 
+isChikouInClearSpace = (high > (high[displacement] + 5.00) and isChikouAboveAllLines) or (low < (low[displacement] - 5.00) and isChikouBelowAllLines)
+plot(close, offset = -displacement, color=isChikouInClearSpace ? orange : yellow, linewidth=2, title="Chikou Lagging Span")
+useChikou = input(false, title="Use Chikou Clear Space")
+
 // Logic for open positions
 isBuySignal = crossover(tenkanLine, kijunLine) 
 isSellSignal = crossunder(tenkanLine, kijunLine)
-isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
-isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
-isChikouAbovePrice = open > open[displacement]
-isStrongBuySignal = isBuySignal and isAboveCloud and isChikouAbovePrice
-isStrongSellSignal = isSellSignal and isBelowCloud and not isChikouAbovePrice
-isWeakBuySignal = isBuySignal and isBelowCloud
-isWeakSellSignal = isSellSignal and isAboveCloud
-isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or (isSellSignal and isBelowCloud and isChikouAbovePrice)
-isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and not isChikouAbovePrice)
+isStrongBuySignal = isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
+isStrongSellSignal = isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
+isWeakBuySignal = isBuySignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
+isWeakSellSignal = isSellSignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
+isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or (isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true))
+isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true))
 
 // Logic for exit positions
 inOpenPosition = lastOpenPosition[1] != 0
@@ -71,16 +79,16 @@ inPreviousBuy = lastOpenPosition[1] > 0
 inPreviousSell = lastOpenPosition[1] < 0
 isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
 isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
-isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isSellSignal : crossunder(close, kijunLine)) 
-isSellExit = inPreviousSell and (isAggressiveStrategy ? isBuySignal : crossover(close, kijunLine))
+isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal)
+isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal)
 
 // Visualise the Opening positions
-plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.small, text="wb")
-plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.normal, text="Mb")
-plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.large, text="SB")
-plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.small, text="ws")
-plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.normal, text="Ms")
-plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.large, text="SS")
+plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
+plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.normal, text="Mb")
+plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.large, text="SB")
+plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.small, text="ws")
+plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.normal, text="Ms")
+plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.large, text="SS")
 // Visualise the Exit positions
 plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
 plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
