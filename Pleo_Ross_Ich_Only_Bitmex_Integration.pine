@@ -20,7 +20,7 @@
 //      c) price crosses above the kijun line (aggressive), OR
 //      d) price crosses above all 4 lines (conservative)
 
-strategy(title="Pleo_Ross Ichimoku Only", shorttitle="PleoIchV4", overlay=true)
+study(title="Pleo_Ross Ichimoku Only", shorttitle="PleoIchV4", overlay=true)
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
@@ -75,23 +75,23 @@ isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isSellSignal : crossunder(
 isSellExit = inPreviousSell and (isAggressiveStrategy ? isBuySignal : crossover(close, kijunLine))
 
 // Visualise the Opening positions
-plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.small, text="wb")
-plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.normal, text="Mb")
-plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.large, text="SB")
-plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.small, text="ws")
-plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.normal, text="Ms")
-plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.large, text="SS")
+plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
+plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.normal, text="Mb")
+plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.large, text="SB")
+plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.small, text="ws")
+plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.normal, text="Ms")
+plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.large, text="SS")
 // Visualise the Exit positions
 plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
 plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
 
 if isBuyExit
-    strategy.close("buy")
+    // strategy.close("buy")
     lastOpenPosition := 0
     price := close
 
 if isSellExit
-    strategy.close("sell")
+    // strategy.close("sell")
     lastOpenPosition := 0
     price := close
 
@@ -100,15 +100,15 @@ if (isBuySignal and not inPreviousBuy)
     price := close
     if isStrongBuySignal
         lastOpenPosition := 3
-        strategy.entry("buy", strategy.long, 3, comment="Strong buy")        
+        // strategy.entry("buy", strategy.long, 3, comment="Strong buy")        
     else
         if isMediumBuySignal
             lastOpenPosition := 2
-            strategy.entry("buy", strategy.long, 2, comment="Medium buy")
+            // strategy.entry("buy", strategy.long, 2, comment="Medium buy")
         else
             if isWeakBuySignal
                 lastOpenPosition := 1
-                strategy.entry("buy", strategy.long, 1, comment="Weak buy")
+                // strategy.entry("buy", strategy.long, 1, comment="Weak buy")
 
 
 if (isSellSignal and not inPreviousSell)
@@ -116,17 +116,28 @@ if (isSellSignal and not inPreviousSell)
     price := close
     if isStrongSellSignal    
         lastOpenPosition := -3
-        strategy.entry("sell", strategy.short, 3, comment="Strong sell")
+        // strategy.entry("sell", strategy.short, 3, comment="Strong sell")
     else
         if isMediumSellSignal    
             lastOpenPosition := -2
-            strategy.entry("sell", strategy.short, 2, comment="Medium sell")
+            // strategy.entry("sell", strategy.short, 2, comment="Medium sell")
         else
             if isWeakSellSignal    
                 lastOpenPosition := -1
-                strategy.entry("sell", strategy.short, 1, comment="Weak sell")
+                // strategy.entry("sell", strategy.short, 1, comment="Weak sell")
 
 // Visualise price change for open positions
 plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
 bgcolor(inPreviousBuy ? green : na, transp=95)
 bgcolor(inPreviousSell ? red : na, transp=95)
+
+//Alert conditions
+alertcondition(isBuyExit, title='Exit Buy', message='Close previous buy order ')
+alertcondition(isSellExit, title='Exit Sell', message='Close previous sell order')
+
+alertcondition(isWeakBuySignal and not inPreviousBuy, title='Weak Buy', message='Close previous sell order and Weak buy condition')
+alertcondition(isMediumBuySignal and not inPreviousBuy, title='Medium Buy', message='Close previous sell order and Medium buy condition')
+alertcondition(isStrongBuySignal and not inPreviousBuy, title='Strong Buy', message='Close previous sell order and Strong buy condition')
+alertcondition(isWeakSellSignal and not inPreviousSell, title='Weak Sell', message='Close previous buy order and Weak sell condition')
+alertcondition(isMediumSellSignal and not inPreviousSell, title='Medium Sell', message='Close previous buy order and Medium sell condition')
+alertcondition(isStrongSellSignal and not inPreviousSell, title='Strong Sell', message='Close previous buy order and Strong sell condition')
