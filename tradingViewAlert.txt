@@ -1,3 +1,14 @@
+
+Strong Sell 
+e=bitmex-testnet s=xbtusd c=position t=market
+e=bitmex-testnet s=xbtusd c=order t=market
+e=bitmex-testnet s=xbtusd b=sell t=market q=30000 l=0
+
+Medium Sell 
+e=bitmex-testnet s=xbtusd c=position t=market
+e=bitmex-testnet s=xbtusd c=order t=market
+e=bitmex-testnet s=xbtusd b=sell t=market q=20000 l=0
+
 Weak Sell
 e=bitmex-testnet s=xbtusd c=position t=market
 e=bitmex-testnet s=xbtusd c=order t=market
@@ -8,10 +19,10 @@ e=bitmex-testnet s=xbtusd c=position t=market
 e=bitmex-testnet s=xbtusd c=order t=market
 e=bitmex-testnet s=xbtusd t=market b=buy q=20000 l=0
 
-Strong Sell 
+Medium Buy
 e=bitmex-testnet s=xbtusd c=position t=market
 e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd b=sell t=market q=20000 l=0
+e=bitmex-testnet s=xbtusd t=market b=buy q=20000 l=0
 
 Weak Buy
 e=bitmex-testnet s=xbtusd c=position t=market
