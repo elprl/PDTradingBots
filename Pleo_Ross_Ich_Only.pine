@@ -122,7 +122,7 @@ if (isSellSignal and not inPreviousSell)
             lastOpenPosition := -2
             strategy.entry("sell", strategy.short, 2, comment="Medium sell")
         else
-            if isStrongSellSignal    
+            if isWeakSellSignal    
                 lastOpenPosition := -1
                 strategy.entry("sell", strategy.short, 1, comment="Weak sell")
 

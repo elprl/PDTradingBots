@@ -50,19 +50,19 @@ if (weakBuy and not inPreviousBuy)
     strategy.close("sell")
     if strongBuy
         lastOpenPosition := 2
-        strategy.entry("buy", strategy.long, 2)
+        strategy.entry("buy", strategy.long, 2, comment="Strong buy")
     else
         lastOpenPosition := 1
-        strategy.entry("buy", strategy.long, 1)
+        strategy.entry("buy", strategy.long, 1, comment="Weak buy")
 
 if (weakSell and not inPreviousSell)
     strategy.close("buy") 
     if strongSell    
         lastOpenPosition := -2
-        strategy.entry("sell", strategy.short, 2)
+        strategy.entry("sell", strategy.short, 2, comment="Strong sell")
     else
         lastOpenPosition := -1
-        strategy.entry("sell", strategy.short, 1)
+        strategy.entry("sell", strategy.short, 1, comment="Weak sell")
 
 
 ////////////////////
