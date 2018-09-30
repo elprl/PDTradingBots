@@ -20,7 +20,11 @@
 //      c) price crosses above the kijun line (aggressive), OR
 //      d) price crosses above all 4 lines (conservative)
 
-strategy(title="Pleo_Ross Ichimoku Only", shorttitle="PleoIchV4", overlay=true)
+strategy(title="Pleo_Ross Ichimoku Only V5", shorttitle="PleoIchV5", overlay=true)
+
+trailPoints = input(100, "Trail Points (in ticks)", type=integer)
+trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
+testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
@@ -108,15 +112,18 @@ if (isBuySignal and not inPreviousBuy)
     price := close
     if isStrongBuySignal
         lastOpenPosition := 3
-        strategy.entry("buy", strategy.long, 3, comment="Strong buy")        
+        strategy.entry("buy", strategy.long, 3, comment="Strong buy")   
+        strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
     else
         if isMediumBuySignal
             lastOpenPosition := 2
             strategy.entry("buy", strategy.long, 2, comment="Medium buy")
+            strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
         else
             if isWeakBuySignal
                 lastOpenPosition := 1
                 strategy.entry("buy", strategy.long, 1, comment="Weak buy")
+                strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
 
 
 if (isSellSignal and not inPreviousSell)
@@ -125,14 +132,18 @@ if (isSellSignal and not inPreviousSell)
     if isStrongSellSignal    
         lastOpenPosition := -3
         strategy.entry("sell", strategy.short, 3, comment="Strong sell")
+        strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
     else
         if isMediumSellSignal    
             lastOpenPosition := -2
             strategy.entry("sell", strategy.short, 2, comment="Medium sell")
+            strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
         else
             if isWeakSellSignal    
                 lastOpenPosition := -1
                 strategy.entry("sell", strategy.short, 1, comment="Weak sell")
+                strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+
 
 // Visualise price change for open positions
 plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
