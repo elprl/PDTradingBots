@@ -39,29 +39,29 @@ e=bitmex-testnet s=xbtusd t=market b=buy q=10000 l=0
 Strong Sell 
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT b=sell t=market q=30% l=0 st=0.1%
+e=binance s=BTCUSDT b=sell t=market q=3% l=0 ts=0.1%
 
 Medium Sell 
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT b=sell t=market q=20% l=0 st=0.1%
+e=binance s=BTCUSDT b=sell t=market q=2% l=0 ts=0.1%
 
 Weak Sell
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=sell q=10% l=0 st=0.1%
+e=binance s=BTCUSDT t=market b=sell q=1% l=0 ts=0.1%
 
 Strong Buy
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=30% l=0 st=0.1%
+e=binance s=BTCUSDT t=market b=buy q=3% l=0 ts=0.1%
 
 Medium Buy
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=20% l=0 st=0.1%
+e=binance s=BTCUSDT t=market b=buy q=2% l=0 ts=0.1%
 
 Weak Buy
 e=binance s=BTCUSDT c=position t=market
 e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=10% l=0 st=0.1%
+e=binance s=BTCUSDT t=market b=buy q=1% l=0 ts=0.1%
