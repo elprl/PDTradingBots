@@ -20,7 +20,7 @@
 //      c) price crosses above the kijun line (aggressive), OR
 //      d) price crosses above all 4 lines (conservative)
 
-strategy(title="Pleo_Ross Ichimoku Only V5", shorttitle="PleoIchV5", overlay=true)
+strategy(title="Pleo_Ross Ichimoku Only V6", shorttitle="PleoIchV6", overlay=true)
 
 trailPoints = input(100, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
@@ -68,8 +68,11 @@ plot(close, offset = -displacement, color=isChikouInClearSpace ? orange : yellow
 useChikou = input(false, title="Use Chikou Clear Space")
 
 // Logic for open positions
-isBuySignal = crossover(tenkanLine, kijunLine) 
-isSellSignal = crossunder(tenkanLine, kijunLine)
+inOpenPosition = lastOpenPosition[1] != 0
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
+isBuySignal = crossover(tenkanLine, kijunLine) and not inPreviousBuy
+isSellSignal = crossunder(tenkanLine, kijunLine) and not inPreviousSell
 isStrongBuySignal = isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
 isStrongSellSignal = isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
 isWeakBuySignal = isBuySignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
@@ -78,13 +81,10 @@ isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or
 isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true))
 
 // Logic for exit positions
-inOpenPosition = lastOpenPosition[1] != 0
-inPreviousBuy = lastOpenPosition[1] > 0
-inPreviousSell = lastOpenPosition[1] < 0
 isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
 isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
-isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal)
-isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal)
+isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal) and not isSellSignal
+isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal) and not isBuySignal
 
 // Visualise the Opening positions
 plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
@@ -107,8 +107,8 @@ if isSellExit
     lastOpenPosition := 0
     price := close
 
-if (isBuySignal and not inPreviousBuy)
-    //strategy.close("sell")
+if (isBuySignal)
+    strategy.close("sell")
     price := close
     if isStrongBuySignal
         lastOpenPosition := 3
@@ -126,8 +126,8 @@ if (isBuySignal and not inPreviousBuy)
                 strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
 
 
-if (isSellSignal and not inPreviousSell)
-    //strategy.close("buy")
+if (isSellSignal)
+    strategy.close("buy")
     price := close
     if isStrongSellSignal    
         lastOpenPosition := -3

@@ -20,7 +20,11 @@
 //      c) price crosses above the kijun line (aggressive), OR
 //      d) price crosses above all 4 lines (conservative)
 
-study(title="Pleo_Ross Ichimoku Only", shorttitle="PleoIchV4", overlay=true)
+study(title="Pleo_Ross Ichimoku Only Alert Integration V6", shorttitle="PleoIchV6Alert", overlay=true)
+
+trailPoints = input(100, "Trail Points (in ticks)", type=integer)
+trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
+testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
@@ -64,23 +68,23 @@ plot(close, offset = -displacement, color=isChikouInClearSpace ? orange : yellow
 useChikou = input(false, title="Use Chikou Clear Space")
 
 // Logic for open positions
-isBuySignal = crossover(tenkanLine, kijunLine) 
-isSellSignal = crossunder(tenkanLine, kijunLine)
+inOpenPosition = lastOpenPosition[1] != 0
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
+isBuySignal = crossover(tenkanLine, kijunLine) and not inPreviousBuy
+isSellSignal = crossunder(tenkanLine, kijunLine) and not inPreviousSell
 isStrongBuySignal = isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
 isStrongSellSignal = isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
 isWeakBuySignal = isBuySignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
 isWeakSellSignal = isSellSignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
-isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or (isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true))
-isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true))
+isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) and (useChikou ? isChikouInClearSpace : true)
+isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) and (useChikou ? isChikouInClearSpace : true)
 
 // Logic for exit positions
-inOpenPosition = lastOpenPosition[1] != 0
-inPreviousBuy = lastOpenPosition[1] > 0
-inPreviousSell = lastOpenPosition[1] < 0
 isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
 isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
-isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal)
-isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal)
+isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal) and not isSellSignal
+isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal) and not isBuySignal
 
 // Visualise the Opening positions
 plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
@@ -96,43 +100,36 @@ plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red,
 if isBuyExit
     lastOpenPosition := 0
     price := close
-    // strategy.close("buy")
+
 
 if isSellExit
     lastOpenPosition := 0
     price := close
-    // strategy.close("sell")
 
-if (isBuySignal and not inPreviousBuy)
+
+if isBuySignal
     price := close
-    //strategy.close("sell")
     if isStrongBuySignal
         lastOpenPosition := 3
-        // strategy.entry("buy", strategy.long, 3, comment="Strong buy")        
     else
         if isMediumBuySignal
             lastOpenPosition := 2
-            // strategy.entry("buy", strategy.long, 2, comment="Medium buy")
         else
             if isWeakBuySignal
                 lastOpenPosition := 1
-                // strategy.entry("buy", strategy.long, 1, comment="Weak buy")
 
 
-if (isSellSignal and not inPreviousSell)
+if isSellSignal
     price := close
-    //strategy.close("buy")
     if isStrongSellSignal    
         lastOpenPosition := -3
-        // strategy.entry("sell", strategy.short, 3, comment="Strong sell")
     else
         if isMediumSellSignal    
             lastOpenPosition := -2
-            // strategy.entry("sell", strategy.short, 2, comment="Medium sell")
         else
             if isWeakSellSignal    
                 lastOpenPosition := -1
-                // strategy.entry("sell", strategy.short, 1, comment="Weak sell")
+
 
 // Visualise price change for open positions
 plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
@@ -143,9 +140,9 @@ bgcolor(inPreviousSell ? red : na, transp=95)
 alertcondition(isBuyExit, title='Exit Buy', message='Close previous buy order ')
 alertcondition(isSellExit, title='Exit Sell', message='Close previous sell order')
 
-alertcondition(isWeakBuySignal and not inPreviousBuy, title='Weak Buy', message='Close previous sell order and Weak buy condition')
-alertcondition(isMediumBuySignal and not inPreviousBuy, title='Medium Buy', message='Close previous sell order and Medium buy condition')
-alertcondition(isStrongBuySignal and not inPreviousBuy, title='Strong Buy', message='Close previous sell order and Strong buy condition')
-alertcondition(isWeakSellSignal and not inPreviousSell, title='Weak Sell', message='Close previous buy order and Weak sell condition')
-alertcondition(isMediumSellSignal and not inPreviousSell, title='Medium Sell', message='Close previous buy order and Medium sell condition')
-alertcondition(isStrongSellSignal and not inPreviousSell, title='Strong Sell', message='Close previous buy order and Strong sell condition')
+alertcondition(isWeakBuySignal, title='Weak Buy', message='Close previous sell order and Weak buy condition')
+alertcondition(isMediumBuySignal, title='Medium Buy', message='Close previous sell order and Medium buy condition')
+alertcondition(isStrongBuySignal, title='Strong Buy', message='Close previous sell order and Strong buy condition')
+alertcondition(isWeakSellSignal, title='Weak Sell', message='Close previous buy order and Weak sell condition')
+alertcondition(isMediumSellSignal, title='Medium Sell', message='Close previous buy order and Medium sell condition')
+alertcondition(isStrongSellSignal, title='Strong Sell', message='Close previous buy order and Strong sell condition')

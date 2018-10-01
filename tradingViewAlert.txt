@@ -3,65 +3,53 @@
 ///////////////////
 
 Strong Sell 
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd b=sell t=market q=30000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=30000 l=0
 
 Medium Sell 
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd b=sell t=market q=20000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=20000 l=0
 
 Weak Sell
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd t=market b=sell q=10000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=10000 l=0
 
 Strong Buy
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd t=market b=buy q=30000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=30000 l=0
 
 Medium Buy
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd t=market b=buy q=20000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=20000 l=0
 
 Weak Buy
-e=bitmex-testnet s=xbtusd c=position t=market
-e=bitmex-testnet s=xbtusd c=order t=market
-e=bitmex-testnet s=xbtusd t=market b=buy q=10000 l=0
+a=paul e=bitmex-testnet s=xbtusd c=position t=market
+a=paul e=bitmex-testnet s=xbtusd c=order t=market
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=10000 l=0
 
 ///////////////////
 // Autoview Binance integration
 ///////////////////
 
 Strong Sell 
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT b=sell t=market q=3% l=0 ts=0.1%
+e=binance s=ETHUSDT b=sell t=market q=25% u=currency
 
 Medium Sell 
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT b=sell t=market q=2% l=0 ts=0.1%
+e=binance s=ETHUSDT b=sell t=market q=25% u=currency
 
 Weak Sell
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=sell q=1% l=0 ts=0.1%
+e=binance s=ETHUSDT b=sell t=market q=25% u=currency
 
 Strong Buy
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=3% l=0 ts=0.1%
+e=binance s=ETHUSDT b=buy t=market q=25% u=currency
 
 Medium Buy
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=2% l=0 ts=0.1%
+e=binance s=ETHUSDT b=buy t=market q=25% u=currency
 
 Weak Buy
-e=binance s=BTCUSDT c=position t=market
-e=binance s=BTCUSDT c=order t=market
-e=binance s=BTCUSDT t=market b=buy q=1% l=0 ts=0.1%
+e=binance s=ETHUSDT b=buy t=market q=25% u=currency
