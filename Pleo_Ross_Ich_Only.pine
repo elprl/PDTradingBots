@@ -20,7 +20,7 @@
 //      c) price crosses above the kijun line (aggressive), OR
 //      d) price crosses above all 4 lines (conservative)
 
-strategy(title="Pleo_Ross Ichimoku Only V6 Strategy", shorttitle="PleoIchV6Strategy", overlay=true, default_qty_value=1)
+strategy(title="Pleo_Ross Ichimoku Only V6 Strategy", shorttitle="PleoIchV6Strategy", overlay=true, default_qty_value=1, , commission_type=strategy.commission.percent, commission_value=0.075)
 
 trailPoints = input(100, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
