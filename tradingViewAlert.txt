@@ -102,10 +102,9 @@ e=binance s=ETHUSDT b=sell t=market q=1 u=contracts
 
 Strong Buy
 e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
-e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
 
 Medium Buy
-e=binance s=ETHUSDT b=buy t=market q=25% u=currency
+e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
 
 Weak Buy
-e=binance s=ETHUSDT b=buy t=market q=25% u=currency
+e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
