@@ -5,38 +5,44 @@
 Strong Sell 
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=30000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=30000 u=contracts l=0 ts=0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=3000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=3000 u=contracts l=0 ts=0.1%
 
 Medium Sell 
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=20000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=20000 u=contracts l=0 ts=0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=2000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=2000 u=contracts l=0 ts=0.1%
 
 Weak Sell
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=10000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=10000 u=contracts l=0 ts=0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=1000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=sell t=market q=1000 u=contracts l=0 ts=0.1%
 
 Strong Buy
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=30000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=30000 u=contracts l=0 ts=-0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=3000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=3000 u=contracts l=0 ts=-0.1%
 
 Medium Buy
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=20000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=20000 u=contracts l=0 ts=-0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=2000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=2000 u=contracts l=0 ts=-0.1%
 
 Weak Buy
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
 a=paul e=bitmex-testnet s=xbtusd c=order t=market
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=10000 u=contracts l=0
-a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=10000 u=contracts l=0 ts=-0.1%
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=1000 u=contracts l=0
+a=paul e=bitmex-testnet s=xbtusd b=buy t=market q=1000 u=contracts l=0 ts=-0.1%
 
 Exit Buy or Sell
 a=paul e=bitmex-testnet s=xbtusd c=position t=market
@@ -49,36 +55,42 @@ a=paul e=bitmex-testnet s=xbtusd c=order t=market
 Strong Sell 
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=sell t=market q=3000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=sell t=market q=3000 u=contracts l=0 ts=0.1%
 
 Medium Sell 
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=sell t=market q=2000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=sell t=market q=2000 u=contracts l=0 ts=0.1%
 
 Weak Sell
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=sell t=market q=1000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=sell t=market q=1000 u=contracts l=0 ts=0.1%
 
 Strong Buy
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=buy t=market q=3000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=buy t=market q=3000 u=contracts l=0 ts=-0.1%
 
 Medium Buy
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=buy t=market q=2000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=buy t=market q=2000 u=contracts l=0 ts=-0.1%
 
 Weak Buy
 a=paul e=bitmex s=xbtusd c=position t=market
 a=paul e=bitmex s=xbtusd c=order t=market
+delay=3
 a=paul e=bitmex s=xbtusd b=buy t=market q=1000 u=contracts l=0
 a=paul e=bitmex s=xbtusd b=buy t=market q=1000 u=contracts l=0 ts=-0.1%
 
@@ -108,3 +120,20 @@ e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
 
 Weak Buy
 e=binance s=ETHUSDT b=buy t=market q=1 u=contracts
+
+
+////////////
+// TEST SCRIPTS
+/////////////
+Test Order
+a=paul e=bitmex-testnet s=xbtusd c=position t=market 
+a=paul e=bitmex-testnet s=xbtusd c=order t=market 
+a=paul e=bitmex-testnet s=xbtusd c=position t=limit 
+a=paul e=bitmex-testnet s=xbtusd c=order t=limit 
+delay=3
+a=paul e=bitmex-testnet s=xbtusd b=buy t=post q=100 u=contracts l=0 oto=1 delay=1
+a=paul e=bitmex-testnet s=xbtusd b=buy t=post q=100 u=contracts l=0 ts=-0.2% lid=1
+
+
+
+a=paul e=bitmex-testnet s=xbtusd b=buy t=limit q=1001 u=contracts l=0 sl=-0.3% lid=stops d=1

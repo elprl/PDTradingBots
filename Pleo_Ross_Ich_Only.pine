@@ -1,30 +1,23 @@
 //@version=3
-// HIGH LEVEL STRATEGY
-// Based on logic described here - https://www.youtube.com/watch?v=sghyPtOimXQ
-// 1. Open buy position when: 
-//      a) tenkan/kijun lines crossover, AND 
-//      b) cloud is green (weak), OR
-//      b) current price is above the green cloud (strong)
-// 2. Exit previous buy position when:
-//      a) price has touched the cloud again, OR
-//      b) open sell position mentioned below in 3., OR
-//      c) price crosses below the kijun line (aggressive), OR
-//      d) price crosses below all 4 lines (conservative)
-// 3. Open sell position when:
-//      a) tenkan/kijun lines crossunder, AND
-//      b) cloud is red (weak), OR
-//      b) current price is below the red cloud (strong)
-// 4. Exit previous sell position when:
-//      a) price has touched the cloud again, OR
-//      b) open buy position mentioned below in 1., OR
-//      c) price crosses above the kijun line (aggressive), OR
-//      d) price crosses above all 4 lines (conservative)
+strategy(title="Pleo_Ross Ichimoku Only V6 Strategy", shorttitle="PleoIchV6Strategy", overlay=true, default_qty_value=1, commission_type=strategy.commission.percent, commission_value=0.075, backtest_fill_limits_assumption=1)
 
-strategy(title="Pleo_Ross Ichimoku Only V6 Strategy", shorttitle="PleoIchV6Strategy", overlay=true, default_qty_value=1, , commission_type=strategy.commission.percent, commission_value=0.075)
-
-trailPoints = input(100, "Trail Points (in ticks)", type=integer)
+trailPoints = input(140, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
 testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
+allowsStrongSignal = input(true, "Enables strong signals", type=bool)
+allowsMediumSignal = input(true, "Enables medium signals", type=bool)
+allowsWeakSignal = input(true, "Enables weak signals", type=bool)
+
+// === INPUT BACKTEST RANGE ===
+FromDay   = input(defval = 1, title = "From Day", minval = 1, maxval = 31)
+FromMonth = input(defval = 1, title = "From Month", minval = 1, maxval = 12)
+FromYear  = input(defval = 2017, title = "From Year", minval = 2017)
+ToDay     = input(defval = 1, title = "To Day", minval = 1, maxval = 31)
+ToMonth   = input(defval = 1, title = "To Month", minval = 1, maxval = 12)
+ToYear    = input(defval = 9999, title = "To Year", minval = 2017)
+start     = timestamp(FromYear, FromMonth, FromDay, 00, 00)  // backtest start window
+finish    = timestamp(ToYear, ToMonth, ToDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // create function "within window of time"
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
@@ -110,39 +103,39 @@ if isSellExit
 if (isBuySignal)
     strategy.close("sell")
     price := close
-    if isStrongBuySignal
+    if isStrongBuySignal and allowsStrongSignal
         lastOpenPosition := 3
-        strategy.order("buy", strategy.long, 3, comment="Strong buy")   
-        strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+        strategy.order("buy", strategy.long, 3, comment="Strong buy", when=window())   
+        strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
     else
-        if isMediumBuySignal
+        if isMediumBuySignal and allowsMediumSignal
             lastOpenPosition := 2
-            strategy.order("buy", strategy.long, 2, comment="Medium buy")
-            strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+            strategy.order("buy", strategy.long, 2, comment="Medium buy", when=window())
+            strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
         else
-            if isWeakBuySignal
+            if isWeakBuySignal and allowsWeakSignal
                 lastOpenPosition := 1
-                strategy.order("buy", strategy.long, 1, comment="Weak buy")
-                strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+                strategy.order("buy", strategy.long, 1, comment="Weak buy", when=window())
+                strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
 
 
 if (isSellSignal)
     strategy.close("buy")
     price := close
-    if isStrongSellSignal    
+    if isStrongSellSignal and allowsStrongSignal    
         lastOpenPosition := -3
-        strategy.order("sell", strategy.short, 3, comment="Strong sell")
-        strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+        strategy.order("sell", strategy.short, 3, comment="Strong sell", when=window())
+        strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
     else
-        if isMediumSellSignal    
+        if isMediumSellSignal and allowsMediumSignal    
             lastOpenPosition := -2
-            strategy.order("sell", strategy.short, 2, comment="Medium sell")
-            strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+            strategy.order("sell", strategy.short, 2, comment="Medium sell", when=window())
+            strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
         else
-            if isWeakSellSignal    
+            if isWeakSellSignal and allowsWeakSignal    
                 lastOpenPosition := -1
-                strategy.order("sell", strategy.short, 1, comment="Weak sell")
-                strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points')
+                strategy.order("sell", strategy.short, 1, comment="Weak sell", when=window())
+                strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
 
 
 // Visualise price change for open positions
