@@ -20,14 +20,6 @@ kijunLine = donchian(basePeriods)
 leadLine1 = avg(tenkanLine, kijunLine)
 leadLine2 = donchian(laggingSpan2Periods)
 
-// Plot Ichimoku Cloud
-// plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
-// plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-// //plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
-// p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
-// p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
-// fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
-
 isAggressiveStrategy = input(false, title="Use aggressive closing of positions")
 // store state of open position (whether long or short)
 lastOpenPosition = 0.0
@@ -65,17 +57,6 @@ isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine
 isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal) and not isSellSignal
 isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal) and not isBuySignal
 
-// Visualise the Opening positions
-plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
-plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.normal, text="Mb")
-plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.large, text="SB")
-plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.small, text="ws")
-plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.normal, text="Ms")
-plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.large, text="SS")
-// Visualise the Exit positions
-plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
-plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
-
 if isBuyExit
     lastOpenPosition := 0
     price := close
@@ -110,22 +91,6 @@ if isSellSignal
                 lastOpenPosition := -1
 
 
-// Visualise price change for open positions
-// plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Position")
-// bgcolor(inPreviousBuy ? green : na, transp=95)
-// bgcolor(inPreviousSell ? red : na, transp=95)
-
-//Alert conditions
-alertcondition(isBuyExit, title='Exit Buy', message='Close previous buy order ')
-alertcondition(isSellExit, title='Exit Sell', message='Close previous sell order')
-
-alertcondition(isWeakBuySignal, title='Weak Buy', message='Close previous sell order and Weak buy condition')
-alertcondition(isMediumBuySignal, title='Medium Buy', message='Close previous sell order and Medium buy condition')
-alertcondition(isStrongBuySignal, title='Strong Buy', message='Close previous sell order and Strong buy condition')
-alertcondition(isWeakSellSignal, title='Weak Sell', message='Close previous buy order and Weak sell condition')
-alertcondition(isMediumSellSignal, title='Medium Sell', message='Close previous buy order and Medium sell condition')
-alertcondition(isStrongSellSignal, title='Strong Sell', message='Close previous buy order and Strong sell condition')
-
 ////////////////
 // TRAILING STOP
 ////////////////
@@ -150,14 +115,21 @@ else
     lowest1 := sellSrcTrigger
 
 buyTsl = highest1 * (1-(offset/100))
-plot(highest1, style=line, color=inPreviousBuy ? green : white, title="Highest Position", linewidth=1, transp=70)
-plot(buyTsl, style=line, color=inPreviousBuy ? green : white, title="Highest Trailing Stop Position", linewidth=2)
+plot(highest1, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
+plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
 
 sellTsl = lowest1 * (1+(offset/100))
-plot(lowest1, style=line, color=inPreviousSell ? red : white, title="Lowest Position", linewidth=1, transp=70)
-plot(sellTsl, style=line, color=inPreviousSell ? red : white, title="Lowest Trailing Stop Position", linewidth=2)
+plot(lowest1, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
+plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
 
-// plotshape(inPreviousBuy and crossunder(srctrigger,buyTsl), text="BTStop", style=shape.circle, color=orange)
-// plotshape(inPreviousSell and crossunder(srctrigger,sellTsl), text="STStop", style=shape.circle, color=orange)
-// alertcondition(inPreviousBuy and crossunder(srctrigger,buyTsl), title="Buy Trailing Stop alert", message="SELL")
-// alertcondition(inPreviousSell and crossunder(srctrigger,sellTsl), title="Sell Trailing Stop alert", message="BUY")
+hasTriggeredBuyStop = inPreviousBuy and crossunder(sellSrcTrigger, buyTsl)
+hasTriggeredSellStop = inPreviousSell and crossover(buySrcTrigger, sellTsl)
+
+if hasTriggeredBuyStop or hasTriggeredSellStop
+    lastOpenPosition := 0
+    price := 0
+
+plotshape(hasTriggeredBuyStop, text="BTStop", style=shape.xcross, color=olive)
+plotshape(hasTriggeredSellStop, text="STStop", style=shape.xcross, color=orange)
+alertcondition(hasTriggeredBuyStop, title="Buy Trailing Stop alert", message="Buy Trailing Stop triggered")
+alertcondition(hasTriggeredSellStop, title="Sell Trailing Stop alert", message="Sell Trailing Stop triggered")
