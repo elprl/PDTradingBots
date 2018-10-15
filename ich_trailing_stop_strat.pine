@@ -1,0 +1,183 @@
+//@version=3
+strategy(title="Pleo_Ross Ichimoku & Trailing Stop V1 Strategy", shorttitle="PleoIchTSV1Strategy", overlay=true, default_qty_value=1, commission_type=strategy.commission.percent, commission_value=0.075, backtest_fill_limits_assumption=1)
+
+trailPoints = input(140, "Trail Points (in ticks)", type=integer)
+trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
+testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
+allowsStrongSignal = input(true, "Enables strong signals", type=bool)
+allowsMediumSignal = input(true, "Enables medium signals", type=bool)
+allowsWeakSignal = input(true, "Enables weak signals", type=bool)
+usingCustomTrailingStop = input(true, "Uses custom trailing stop", type=bool)
+
+// === INPUT BACKTEST RANGE ===
+FromDay   = input(defval = 1, title = "From Day", minval = 1, maxval = 31)
+FromMonth = input(defval = 1, title = "From Month", minval = 1, maxval = 12)
+FromYear  = input(defval = 2017, title = "From Year", minval = 2017)
+ToDay     = input(defval = 1, title = "To Day", minval = 1, maxval = 31)
+ToMonth   = input(defval = 1, title = "To Month", minval = 1, maxval = 12)
+ToYear    = input(defval = 9999, title = "To Year", minval = 2017)
+start     = timestamp(FromYear, FromMonth, FromDay, 00, 00)  // backtest start window
+finish    = timestamp(ToYear, ToMonth, ToDay, 23, 59)        // backtest finish window
+window()  => time >= start and time <= finish ? true : false // create function "within window of time"
+
+//Ichimoku input Logic
+conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
+basePeriods = input(26, minval=1, title="Base Line Periods")
+laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
+displacement = input(26, minval=1, title="Displacement")
+
+//Ichimoku function Logic
+donchian(len) => avg(lowest(len), highest(len))
+
+//Ichimoku line Logic
+tenkanLine = donchian(conversionPeriods)
+kijunLine = donchian(basePeriods)
+leadLine1 = avg(tenkanLine, kijunLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+isAggressiveStrategy = input(false, title="Use aggressive closing of positions")
+// store state of open position (whether long or short)
+lastOpenPosition = 0.0
+lastOpenPosition := lastOpenPosition[1]
+price = 0.0
+price := na
+
+// Chikou Logic
+isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
+isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
+isChikouAboveCloud = high > leadLine1[displacement * 2] and high > leadLine2[displacement * 2]
+isChikouBelowCloud = low < leadLine1[displacement * 2] and low < leadLine2[displacement * 2]
+isChikouAboveAllLines = isChikouAboveCloud and high > tenkanLine[displacement] and high > kijunLine[displacement] 
+isChikouBelowAllLines = isChikouBelowCloud and low < tenkanLine[displacement] and low < kijunLine[displacement] 
+isChikouInClearSpace = (high > (high[displacement] + 5.00) and isChikouAboveAllLines) or (low < (low[displacement] - 5.00) and isChikouBelowAllLines)
+useChikou = input(false, title="Use Chikou Clear Space")
+
+// Logic for open positions
+inOpenPosition = lastOpenPosition[1] != 0
+inPreviousBuy = lastOpenPosition[1] > 0
+inPreviousSell = lastOpenPosition[1] < 0
+isBuySignal = crossover(tenkanLine, kijunLine) and not inPreviousBuy
+isSellSignal = crossunder(tenkanLine, kijunLine) and not inPreviousSell
+isStrongBuySignal = isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
+isStrongSellSignal = isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
+isWeakBuySignal = isBuySignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
+isWeakSellSignal = isSellSignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
+isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) or (isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true))
+isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) or (isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true))
+
+// Logic for exit positions
+isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
+isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
+isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal) and not isSellSignal
+isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal) and not isBuySignal
+
+// Visualise the Opening positions
+plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
+plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.normal, text="Mb")
+plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.large, text="SB")
+plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.small, text="ws")
+plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.normal, text="Ms")
+plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.large, text="SS")
+// Visualise the Exit positions
+plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
+plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
+
+if isBuyExit
+    strategy.close("buy")
+    lastOpenPosition := 0
+    price := close
+
+if isSellExit
+    strategy.close("sell")
+    lastOpenPosition := 0
+    price := close
+
+if (isBuySignal)
+    strategy.close("sell")
+    price := close
+    if isStrongBuySignal and allowsStrongSignal
+        lastOpenPosition := 3
+        strategy.order("buy", strategy.long, 3, comment="Strong buy", when=window())   
+        strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+    else
+        if isMediumBuySignal and allowsMediumSignal
+            lastOpenPosition := 2
+            strategy.order("buy", strategy.long, 2, comment="Medium buy", when=window())
+            strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+        else
+            if isWeakBuySignal and allowsWeakSignal
+                lastOpenPosition := 1
+                strategy.order("buy", strategy.long, 1, comment="Weak buy", when=window())
+                strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+
+
+if (isSellSignal)
+    strategy.close("buy")
+    price := close
+    if isStrongSellSignal and allowsStrongSignal    
+        lastOpenPosition := -3
+        strategy.order("sell", strategy.short, 3, comment="Strong sell", when=window())
+        strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+    else
+        if isMediumSellSignal and allowsMediumSignal    
+            lastOpenPosition := -2
+            strategy.order("sell", strategy.short, 2, comment="Medium sell", when=window())
+            strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+        else
+            if isWeakSellSignal and allowsWeakSignal    
+                lastOpenPosition := -1
+                strategy.order("sell", strategy.short, 1, comment="Weak sell", when=window())
+                strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
+
+
+////////////////
+// TRAILING STOP
+////////////////
+offset = input(defval=0.1, title="Offset %", type=float, minval=0.01, maxval=100, step=0.1)
+buyMaxTrigger = input(title="Buy Max trigger", type=source, defval=high)
+sellMaxTrigger = input(title="Sell Max trigger", type=source, defval=low)
+srcTrigger = input(title="Source trigger", type=source, defval=close)
+
+highest1 = buyMaxTrigger
+highest1 := highest1[1]
+if inPreviousBuy 
+    if buyMaxTrigger > highest1[1]
+        highest1 := buyMaxTrigger
+else 
+    highest1 := buyMaxTrigger
+
+lowest1 = sellMaxTrigger
+lowest1 := lowest1[1]
+if inPreviousSell 
+    if sellMaxTrigger < lowest1[1]
+        lowest1 := sellMaxTrigger
+else
+    lowest1 := sellMaxTrigger
+
+buyTsl = highest1 * (1-(offset/100))
+plot(highest1, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
+plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
+
+sellTsl = lowest1 * (1+(offset/100))
+plot(lowest1, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
+plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
+
+hasTriggeredBuyStop = inPreviousBuy and crossunder(srcTrigger, buyTsl) and usingCustomTrailingStop
+hasTriggeredSellStop = inPreviousSell and crossover(srcTrigger, sellTsl) and usingCustomTrailingStop
+
+if hasTriggeredBuyStop
+    strategy.close("buy")
+    lastOpenPosition := 0
+    price := 0
+
+if hasTriggeredSellStop
+    strategy.close("sell")
+    lastOpenPosition := 0
+    price := 0
+
+plotshape(hasTriggeredBuyStop or hasTriggeredSellStop, style=shape.xcross, location=location.abovebar, color=black, size=size.small)
+
+
+// Visualise price change for open positions
+bgcolor(inPreviousBuy ? green : na, transp=95)
+bgcolor(inPreviousSell ? red : na, transp=95)
