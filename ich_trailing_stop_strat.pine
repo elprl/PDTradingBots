@@ -130,7 +130,7 @@ if (isSellSignal)
                 strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window() and not usingCustomTrailingStop)
 
 
-readyToEvalTrigger = not isBuySignal and not isSellSignal 
+readyToEvalTrigger = not isBuySignal and not isSellSignal and not isSellExit and not isBuyExit
 
 ////////////////
 // TRAILING STOP STRATEGY 1
@@ -140,32 +140,32 @@ buyMaxTrigger = input(title="Buy Max trigger", type=source, defval=high)
 sellMaxTrigger = input(title="Sell Max trigger", type=source, defval=low)
 srcTrigger = input(title="Source trigger", type=source, defval=close)
 
-highest1 = buyMaxTrigger
-highest1 := highest1[1]
-if inPreviousBuy 
-    if buyMaxTrigger > highest1[1]
-        highest1 := buyMaxTrigger
-else 
-    highest1 := buyMaxTrigger
+// highest1 = buyMaxTrigger
+// highest1 := highest1[1]
+// if inPreviousBuy 
+//     if buyMaxTrigger > highest1[1]
+//         highest1 := buyMaxTrigger
+// else 
+//     highest1 := buyMaxTrigger
 
-lowest1 = sellMaxTrigger
-lowest1 := lowest1[1]
-if inPreviousSell 
-    if sellMaxTrigger < lowest1[1]
-        lowest1 := sellMaxTrigger
-else
-    lowest1 := sellMaxTrigger
+// lowest1 = sellMaxTrigger
+// lowest1 := lowest1[1]
+// if inPreviousSell 
+//     if sellMaxTrigger < lowest1[1]
+//         lowest1 := sellMaxTrigger
+// else
+//     lowest1 := sellMaxTrigger
 
-buyTsl = highest1 * (1-(offset/100))
-plot(highest1, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
-plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
+// buyTsl = highest1 * (1-(offset/100))
+// plot(highest1, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
+// plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
 
-sellTsl = lowest1 * (1+(offset/100))
-plot(lowest1, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
-plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
+// sellTsl = lowest1 * (1+(offset/100))
+// plot(lowest1, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
+// plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
 
-hasTriggeredBuyStop = inPreviousBuy and crossunder(srcTrigger, buyTsl) and usingCustomTrailingStop and readyToEvalTrigger
-hasTriggeredSellStop = inPreviousSell and crossover(srcTrigger, sellTsl) and usingCustomTrailingStop and readyToEvalTrigger
+// hasTriggeredBuyStop = inPreviousBuy and crossunder(srcTrigger, buyTsl) and usingCustomTrailingStop and readyToEvalTrigger
+// hasTriggeredSellStop = inPreviousSell and crossover(srcTrigger, sellTsl) and usingCustomTrailingStop and readyToEvalTrigger
 
 // if hasTriggeredBuyStop
 //     strategy.close("buy")
@@ -187,10 +187,14 @@ last_high = buyMaxTrigger
 last_low = sellMaxTrigger
 last_high := not inPreviousBuy ? na : inPreviousBuy and (na(last_high[1]) or buyMaxTrigger > nz(last_high[1])) ? buyMaxTrigger : nz(last_high[1])
 last_low := not inPreviousSell ? na : inPreviousSell and (na(last_low[1]) or sellMaxTrigger < nz(last_low[1])) ? sellMaxTrigger : nz(last_low[1])
-
-long_ts = not na(last_high) and srcTrigger <= (last_high * (1-(offset/100))) and usingCustomTrailingStop and readyToEvalTrigger
-short_ts = not na(last_low) and srcTrigger >= (last_low * (1+(offset/100))) and usingCustomTrailingStop and readyToEvalTrigger
-
+buyTsl = last_high * (1-(offset/100))
+plot(last_high, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
+plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
+sellTsl = last_low * (1+(offset/100))
+plot(last_low, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
+plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
+long_ts = not na(last_high) and srcTrigger <= buyTsl and usingCustomTrailingStop and readyToEvalTrigger
+short_ts = not na(last_low) and srcTrigger >= sellTsl and usingCustomTrailingStop and readyToEvalTrigger
 if long_ts
     strategy.close("buy")
     lastOpenPosition := 0
@@ -205,41 +209,55 @@ plotshape(long_ts, style=shape.xcross, location=location.abovebar, color=olive, 
 plotshape(short_ts, style=shape.xcross, location=location.abovebar, color=orange, size=size.small, text="Trailing\nStop")
 
 
-////////////////
-// TRAILING STOP STRATEGY 3
-////////////////
-study("Trailing stop", overlay=true)
-sumbars = input(defval=6, title="Use last x bars for calculation", type=integer, minval=1)
-tsl = (sum(close,sumbars)/sumbars)*(1-(offset/100))
-plot(tsl, color=(srctrigger<tsl)?red:green)
-plotshape(crossunder(srctrigger,tsl), text="Stop", style=shape.circle, color=orange)
-alertcondition(crossunder(srctrigger,tsl), "Stop alert", "SELL")
+// ////////////////
+// // TRAILING STOP STRATEGY 3
+// ////////////////
+// sumbars = input(defval=6, title="Use last x bars for calculation", type=integer, minval=1)
+// tsl = (sum(close,sumbars)/sumbars)*(1-(offset/100))
+// plot(tsl, color=(srcTrigger<tsl)?red:green)
+// buyStopCondition = crossunder(srcTrigger,tsl) and inPreviousBuy and readyToEvalTrigger and usingCustomTrailingStop
+// sellStopCondition = crossover(srcTrigger,tsl) and inPreviousSell and readyToEvalTrigger and usingCustomTrailingStop
+// plotshape(buyStopCondition, text="Buy\nStop", style=shape.circle, color=olive)
+// plotshape(sellStopCondition, text="Sell\nStop", style=shape.circle, color=red)
+// alertcondition(buyStopCondition, "Stop alert", "SELL")
+// alertcondition(sellStopCondition, "Stop alert", "BUY")
+// if (buyStopCondition)
+//     strategy.close("buy")
+//     lastOpenPosition := 0
+//     price := 0
+
+// if (sellStopCondition)
+//     strategy.close("sell")
+//     lastOpenPosition := 0
+//     price := 0
 
 ////////////////
 // TRAILING STOP STRATEGY 4
 ////////////////
-longoffset = input(defval=228.5, title="Long Trailing Stop Size", type=float, minval=0.5, maxval=1000, step=0.5)
-shortoffset = input(defval=243.5, title="Short Trailing Stop Size ", type=float, minval=0.5, maxval=1000, step=0.5)
-hiprice = security(tickerid, "1", high)
-loprice = security(tickerid, "1", low)
-price = security(tickerid, "1", close)
-trailstop = price
-trailstop := (loprice <= trailstop[1] and loprice[1] >= trailstop[2]) ? price + shortoffset : ((hiprice >= trailstop[1] and hiprice[1] <= trailstop[2]) ? price - longoffset : (hiprice > trailstop[1] ? max(hiprice - longoffset, trailstop[1]) : (loprice < trailstop[1] ? min(loprice + shortoffset, trailstop[1]) : price)))
-trailcol = trailstop > price ? red : green
-plot(trailstop, color=trailcol)
-longCondition = (trailcol == green)
-alertcondition(longCondition, "Long Stop alert", "BUY")
-if (longCondition)
-    strategy.close("buy")
-    lastOpenPosition := 0
-    price := 0
+// longoffset = input(defval=100, title="Long Trailing Stop Size", type=float, minval=0.5, maxval=1000, step=0.5)
+// shortoffset = input(defval=100, title="Short Trailing Stop Size ", type=float, minval=0.5, maxval=1000, step=0.5)
+// hiprice = security(tickerid, "1", high)
+// loprice = security(tickerid, "1", low)
+// price1 = security(tickerid, "1", close)
+// trailstop = price1
+// trailstop := (loprice <= trailstop[1] and loprice[1] >= trailstop[2]) ? price1 + shortoffset : ((hiprice >= trailstop[1] and hiprice[1] <= trailstop[2]) ? price1 - longoffset : (hiprice > trailstop[1] ? max(hiprice - longoffset, trailstop[1]) : (loprice < trailstop[1] ? min(loprice + shortoffset, trailstop[1]) : price1)))
+// trailcol = trailstop > price1 ? red : green
+// plot(trailstop, color=trailcol)
+// longCondition = (trailcol == green) and inPreviousSell and readyToEvalTrigger and usingCustomTrailingStop
+// alertcondition(longCondition, "Long Stop alert", "BUY")
+// plotshape(longCondition, text="Sell\nStop", style=shape.circle, color=red)
+// if (longCondition)
+//     strategy.close("buy")
+//     lastOpenPosition := 0
+//     price := 0
 
-shortCondition = (trailcol == red)
-alertcondition(shortCondition, "Short alert", "SELL")
-if (shortCondition)
-    strategy.close("sell")
-    lastOpenPosition := 0
-    price := 0
+// shortCondition = (trailcol == red) and inPreviousBuy and readyToEvalTrigger and usingCustomTrailingStop
+// alertcondition(shortCondition, "Short alert", "SELL")
+// plotshape(shortCondition, text="Buy\nStop", style=shape.circle, color=olive)
+// if (shortCondition)
+//     strategy.close("sell")
+//     lastOpenPosition := 0
+//     price := 0
 
 // Visualise price change for open positions
 bgcolor(lastOpenPosition > 0 ? green : na, transp=95)
