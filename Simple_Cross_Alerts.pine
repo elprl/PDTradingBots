@@ -1,10 +1,6 @@
 //@version=3
 study(title="Ichimoku Crossover Alerts Only V1", shorttitle="CrossoverAlertsV1", overlay=true)
 
-trailPoints = input(100, "Trail Points (in ticks)", type=integer)
-trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
-testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
-
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
 basePeriods = input(26, minval=1, title="Base Line Periods")
@@ -21,12 +17,12 @@ leadLine1 = avg(tenkanLine, kijunLine)
 leadLine2 = donchian(laggingSpan2Periods)
 
 // Plot Ichimoku Cloud
-plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
-plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
-p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
-p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
-fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+// plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+// plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+// plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
+// p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+// p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+// fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
 // Chikou Logic
 isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
