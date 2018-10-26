@@ -24,7 +24,6 @@ leadLine2 = donchian(laggingSpan2Periods)
 // p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
 // fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
-// Chikou Logic
 isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
 isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
 
