@@ -1,0 +1,53 @@
+//@version=3
+study(title="Ichimoku Crossover Alerts Only V1", shorttitle="CrossoverAlertsV1", overlay=true)
+
+//Ichimoku input Logic
+conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
+basePeriods = input(26, minval=1, title="Base Line Periods")
+laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
+displacement = input(26, minval=1, title="Displacement")
+
+//Ichimoku function Logic
+donchian(len) => avg(lowest(len), highest(len))
+
+//Ichimoku line Logic
+tenkanLine = donchian(conversionPeriods)
+kijunLine = donchian(basePeriods)
+leadLine1 = avg(tenkanLine, kijunLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+// Plot Ichimoku Cloud
+// plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+// plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+// plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
+// p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+// p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+// fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
+
+isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
+isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
+
+isBuySignal = crossover(tenkanLine, kijunLine) 
+isSellSignal = crossunder(tenkanLine, kijunLine) 
+isStrongBuySignal = isBuySignal and isAboveCloud
+isStrongSellSignal = isSellSignal and isBelowCloud
+isWeakBuySignal = isBuySignal and isBelowCloud
+isWeakSellSignal = isSellSignal and isAboveCloud
+isMediumSellSignal = isSellSignal and not isBelowCloud and not isAboveCloud
+isMediumBuySignal = isBuySignal and not isBelowCloud and not isAboveCloud
+
+// Visualise the Opening positions
+plotshape(isWeakBuySignal, style=shape.arrowup, location=location.belowbar, color=green, size=size.small, text="weak\nbuy")
+plotshape(isMediumBuySignal, style=shape.arrowup, location=location.belowbar, color=green, size=size.normal, text="medium\nbuy")
+plotshape(isStrongBuySignal, style=shape.arrowup, location=location.belowbar, color=green, size=size.large, text="strong\nbuy")
+plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.abovebar, color=red, size=size.small, text="weak\nsell")
+plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.abovebar, color=red, size=size.normal, text="medium\nsell")
+plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.abovebar, color=red, size=size.large, text="strong\nsell")
+
+// Alert conditions
+alertcondition(isWeakBuySignal, title='Weak Buy', message='Close previous sell order and Weak buy condition')
+alertcondition(isMediumBuySignal, title='Medium Buy', message='Close previous sell order and Medium buy condition')
+alertcondition(isStrongBuySignal, title='Strong Buy', message='Close previous sell order and Strong buy condition')
+alertcondition(isWeakSellSignal, title='Weak Sell', message='Close previous buy order and Weak sell condition')
+alertcondition(isMediumSellSignal, title='Medium Sell', message='Close previous buy order and Medium sell condition')
+alertcondition(isStrongSellSignal, title='Strong Sell', message='Close previous buy order and Strong sell condition')
