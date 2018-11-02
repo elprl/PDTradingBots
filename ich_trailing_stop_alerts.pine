@@ -1,5 +1,5 @@
 //@version=3
-strategy(title="Pleo_Ross Ichimoku & Trailing Stop V1 Strategy", shorttitle="PleoIchTSV1Strategy", overlay=true, default_qty_value=1, commission_type=strategy.commission.percent, commission_value=0.075, backtest_fill_limits_assumption=1)
+strategy(title="Pleo_Ross Ichimoku & Trailing Stop V2 Alerts", shorttitle="PleoIchTSV2Alerts", overlay=true, default_qty_value=1, commission_type=strategy.commission.percent, commission_value=0.075, backtest_fill_limits_assumption=1)
 
 trailPoints = input(140, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
@@ -25,15 +25,24 @@ conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
 basePeriods = input(26, minval=1, title="Base Line Periods")
 laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
 displacement = input(26, minval=1, title="Displacement")
+candlePeriod = input(title="Candlestick Period", defval='45', options=['1', '3', '5', '10', '15', '30', '45', '60', '120', '180', '240', 'D', 'W', 'M'])
 
 //Ichimoku function Logic
 donchian(len) => avg(lowest(len), highest(len))
 
 //Ichimoku line Logic
-tenkanLine = donchian(conversionPeriods)
-kijunLine = donchian(basePeriods)
-leadLine1 = avg(tenkanLine, kijunLine)
-leadLine2 = donchian(laggingSpan2Periods)
+tenkanLine = security(tickerid, candlePeriod, donchian(conversionPeriods))
+kijunLine = security(tickerid, candlePeriod, donchian(basePeriods))
+leadLine1 = security(tickerid, candlePeriod, avg(tenkanLine, kijunLine))
+leadLine2 = security(tickerid, candlePeriod, donchian(laggingSpan2Periods))
+
+// Plot Ichimoku Cloud
+plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
+plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
+plot(close, offset = -displacement, color=green, linewidth=2, title="Chikou Lagging Span")
+p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
+p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
+fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
 isAggressiveStrategy = input(false, title="Use aggressive closing of positions")
 // store state of open position (whether long or short)
@@ -157,12 +166,14 @@ else
     lowest1 := sellMaxTrigger
 
 buyTsl = highest1 * (1-(offset/100))
-plot(highest1, style=line, color=inPreviousBuy ? olive : white, title="Highest Position", linewidth=1, transp=70)
-plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
+h1 = plot(highest1, style=line, color=inPreviousBuy ? black : white, title="Highest Position", linewidth=1, transp=70)
+h2 = plot(buyTsl, style=line, color=inPreviousBuy ? olive : white, title="Highest Trailing Stop Position", linewidth=2)
+fill(h1, h2, color=inPreviousBuy ? olive : white, transp=90)
 
 sellTsl = lowest1 * (1+(offset/100))
-plot(lowest1, style=line, color=inPreviousSell ? orange : white, title="Lowest Position", linewidth=1, transp=70)
-plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
+l1 = plot(lowest1, style=line, color=inPreviousSell ? black : white, title="Lowest Position", linewidth=1, transp=70)
+l2 = plot(sellTsl, style=line, color=inPreviousSell ? orange : white, title="Lowest Trailing Stop Position", linewidth=2)
+fill(l1, l2, color=inPreviousSell ? orange : white, transp=90)
 
 hasTriggeredBuyStop = inPreviousBuy and crossunder(srcTrigger, buyTsl) and usingCustomTrailingStop and readyToEvalTrigger
 hasTriggeredSellStop = inPreviousSell and crossover(srcTrigger, sellTsl) and usingCustomTrailingStop and readyToEvalTrigger
@@ -260,5 +271,5 @@ plotshape(hasTriggeredSellStop, style=shape.xcross, location=location.abovebar, 
 //     price := 0
 
 // Visualise price change for open positions
-bgcolor(lastOpenPosition > 0 ? green : na, transp=95)
-bgcolor(lastOpenPosition < 0 ? red : na, transp=95)
+// bgcolor(lastOpenPosition > 0 ? green : na, transp=95)
+// bgcolor(lastOpenPosition < 0 ? red : na, transp=95)
