@@ -1,36 +1,12 @@
 //@version=3
-// HIGH LEVEL STRATEGY
-// Based on logic described here - https://www.youtube.com/watch?v=sghyPtOimXQ
-// 1. Open buy position when: 
-//      a) tenkan/kijun lines crossover, AND 
-//      b) cloud is green (weak), OR
-//      b) current price is above the green cloud (strong)
-// 2. Exit previous buy position when:
-//      a) price has touched the cloud again, OR
-//      b) open sell position mentioned below in 3., OR
-//      c) price crosses below the kijun line (aggressive), OR
-//      d) price crosses below all 4 lines (conservative)
-// 3. Open sell position when:
-//      a) tenkan/kijun lines crossunder, AND
-//      b) cloud is red (weak), OR
-//      b) current price is below the red cloud (strong)
-// 4. Exit previous sell position when:
-//      a) price has touched the cloud again, OR
-//      b) open buy position mentioned below in 1., OR
-//      c) price crosses above the kijun line (aggressive), OR
-//      d) price crosses above all 4 lines (conservative)
-
-study(title="Pleo_Ross Ichimoku Only Alert Integration V6", shorttitle="PleoIchV6Alert", overlay=true)
-
-trailPoints = input(100, "Trail Points (in ticks)", type=integer)
-trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
-testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
+study(title="Pleo_Ross Ichimoku Only Alert Integration V7", shorttitle="PleoIchV7Alert", overlay=true)
 
 //Ichimoku input Logic
 conversionPeriods = input(9, minval=1, title="Conversion Line Periods"),
 basePeriods = input(26, minval=1, title="Base Line Periods")
 laggingSpan2Periods = input(52, minval=1, title="Lagging Span 2 Periods"),
 displacement = input(26, minval=1, title="Displacement")
+candlePeriod = input(title="Candlestick Period", defval='45', options=['1', '3', '5', '10', '15', '30', '45', '60', '120', '180', '240', 'D', 'W', 'M'])
 
 //Ichimoku function Logic
 donchian(len) => avg(lowest(len), highest(len))
@@ -44,105 +20,19 @@ leadLine2 = donchian(laggingSpan2Periods)
 // Plot Ichimoku Cloud
 plot(tenkanLine, color=blue, linewidth=3, title="Tenkan Line")
 plot(kijunLine, color=red, linewidth=3, title="Kijun Line")
-//plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
+plot(close, offset = -displacement, color=yellow, linewidth=2, title="Chikou Lagging Span")
 p1 = plot(leadLine1, offset = displacement, color=white, title="Lead 1")
 p2 = plot(leadLine2, offset = displacement, color=white, title="Lead 2")
 fill(p1, p2, color = leadLine1 > leadLine2 ? green : red)
 
-isAggressiveStrategy = input(false, title="Use aggressive closing of positions")
-// store state of open position (whether long or short)
-lastOpenPosition = 0.0
-lastOpenPosition := lastOpenPosition[1]
-price = 0.0
-price := na
-
-// Chikou Logic
-isAboveCloud = open > leadLine1[displacement] and open > leadLine2[displacement]
-isBelowCloud = open < leadLine1[displacement] and open < leadLine2[displacement]
-isChikouAboveCloud = high > leadLine1[displacement * 2] and high > leadLine2[displacement * 2]
-isChikouBelowCloud = low < leadLine1[displacement * 2] and low < leadLine2[displacement * 2]
-isChikouAboveAllLines = isChikouAboveCloud and high > tenkanLine[displacement] and high > kijunLine[displacement] 
-isChikouBelowAllLines = isChikouBelowCloud and low < tenkanLine[displacement] and low < kijunLine[displacement] 
-isChikouInClearSpace = (high > (high[displacement] + 5.00) and isChikouAboveAllLines) or (low < (low[displacement] - 5.00) and isChikouBelowAllLines)
-plot(close, offset = -displacement, color=isChikouInClearSpace ? orange : yellow, linewidth=2, title="Chikou Lagging Span")
-useChikou = input(false, title="Use Chikou Clear Space")
-
 // Logic for open positions
-inOpenPosition = lastOpenPosition[1] != 0
-inPreviousBuy = lastOpenPosition[1] > 0
-inPreviousSell = lastOpenPosition[1] < 0
-isBuySignal = crossover(tenkanLine, kijunLine) and not inPreviousBuy
-isSellSignal = crossunder(tenkanLine, kijunLine) and not inPreviousSell
-isStrongBuySignal = isBuySignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
-isStrongSellSignal = isSellSignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
-isWeakBuySignal = isBuySignal and isBelowCloud and (useChikou ? isChikouInClearSpace : true)
-isWeakSellSignal = isSellSignal and isAboveCloud and (useChikou ? isChikouInClearSpace : true)
-isMediumSellSignal = (isSellSignal and not isBelowCloud and not isAboveCloud) and (useChikou ? isChikouInClearSpace : true)
-isMediumBuySignal = (isBuySignal and not isBelowCloud and not isAboveCloud) and (useChikou ? isChikouInClearSpace : true)
-
-// Logic for exit positions
-isAboveAllLines = isAboveCloud and close > tenkanLine and close > kijunLine 
-isBelowAllLines = isBelowCloud and close < tenkanLine and close < kijunLine 
-isBuyExit = inPreviousBuy and (isAggressiveStrategy ? isBelowAllLines or crossunder(close, kijunLine) : isSellSignal) and not isSellSignal
-isSellExit = inPreviousSell and (isAggressiveStrategy ? isAboveAllLines or crossover(close, kijunLine) : isBuySignal) and not isBuySignal
+isBuySignal = crossover(tenkanLine, kijunLine) 
+isSellSignal = crossunder(tenkanLine, kijunLine) 
 
 // Visualise the Opening positions
-plotshape(isWeakBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.small, text="wb")
-plotshape(isMediumBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.normal, text="Mb")
-plotshape(isStrongBuySignal, style=shape.arrowup, location=location.abovebar, color=inPreviousBuy ? green : gray, size=size.large, text="SB")
-plotshape(isWeakSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.small, text="ws")
-plotshape(isMediumSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.normal, text="Ms")
-plotshape(isStrongSellSignal, style=shape.arrowdown, location=location.belowbar, color=inPreviousSell ? red : gray, size=size.large, text="SS")
-// Visualise the Exit positions
-plotshape(isBuyExit, style=shape.xcross, location=location.abovebar, color=green, size=size.small)
-plotshape(isSellExit, style=shape.xcross, location=location.belowbar, color=red, size=size.small)
-
-if isBuyExit
-    lastOpenPosition := 0
-    price := close
-
-
-if isSellExit
-    lastOpenPosition := 0
-    price := close
-
-
-if isBuySignal
-    price := close
-    if isStrongBuySignal
-        lastOpenPosition := 3
-    else
-        if isMediumBuySignal
-            lastOpenPosition := 2
-        else
-            if isWeakBuySignal
-                lastOpenPosition := 1
-
-
-if isSellSignal
-    price := close
-    if isStrongSellSignal    
-        lastOpenPosition := -3
-    else
-        if isMediumSellSignal    
-            lastOpenPosition := -2
-        else
-            if isWeakSellSignal    
-                lastOpenPosition := -1
-
-
-// Visualise price change for open positions
-plot(price, style=line, color=inOpenPosition ? purple : white, title="Open Postion")
-bgcolor(inPreviousBuy ? green : na, transp=95)
-bgcolor(inPreviousSell ? red : na, transp=95)
+plotshape(isBuySignal, style=shape.arrowup, location=location.abovebar, color=green, size=size.large, text="Buy")
+plotshape(isSellSignal, style=shape.arrowdown, location=location.belowbar, color=red, size=size.large, text="Sell")
 
 //Alert conditions
-alertcondition(isBuyExit, title='Exit Buy', message='Close previous buy order ')
-alertcondition(isSellExit, title='Exit Sell', message='Close previous sell order')
-
-alertcondition(isWeakBuySignal, title='Weak Buy', message='Close previous sell order and Weak buy condition')
-alertcondition(isMediumBuySignal, title='Medium Buy', message='Close previous sell order and Medium buy condition')
-alertcondition(isStrongBuySignal, title='Strong Buy', message='Close previous sell order and Strong buy condition')
-alertcondition(isWeakSellSignal, title='Weak Sell', message='Close previous buy order and Weak sell condition')
-alertcondition(isMediumSellSignal, title='Medium Sell', message='Close previous buy order and Medium sell condition')
-alertcondition(isStrongSellSignal, title='Strong Sell', message='Close previous buy order and Strong sell condition')
+alertcondition(isBuySignal, title='Buy', message='Buy signal')
+alertcondition(isSellSignal, title='Sell', message='Sell signal')
