@@ -9,7 +9,7 @@ useSMA = input(false, "Use SMA with CCI", type=bool)
 trailPoints = input(140, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
 testType = input('Trail Points', "Test Points or Price", options=['Trail Points', 'Trail Price'])
-
+cciPeriod = input(20, "CCI Period (number of bars)", type=integer)
 
 // === INPUT BACKTEST RANGE ===
 FromDay   = input(defval = 14, title = "From Day", minval = 1, maxval = 31)
@@ -25,29 +25,39 @@ window()  => time >= start and time <= finish ? true : false // create function 
 hline(upperBoundLine, color=orange, linestyle=dashed)
 hline(lowerBoundLine, color=olive, linestyle=dashed)
 
-xCCI = cci(close, 10)
+xCCI = cci(close, cciPeriod)
 xSMA = sma(xCCI, SlowMA)
 xFMA = sma(xCCI, FastMA)
 pos = 0
 pos := iff(xSMA < xFMA , 1, iff(xSMA > xFMA, -1, nz(pos[1], 0)))
 
+inOpenPosition = strategy.position_size != 0
+inPreviousBuy = strategy.position_size > 0
+inPreviousSell = strategy.position_size < 0
+
 isSellSignal = useSMA ? crossunder(xSMA, xFMA) : crossunder(xCCI, upperBoundLine) 
 isBuySignal = useSMA ? crossover(xSMA, xFMA) : crossover(xCCI, lowerBoundLine)
 
 // Visualise the Opening positions
-plotshape(isSellSignal ? 1 : na, style=shape.arrowdown, location=location.absolute, color=green, text="Sell")
-plotshape(isBuySignal ? 1 : na, style=shape.arrowup, location=location.absolute, color=red, text="Buy")
+plotshape((isSellSignal and inPreviousSell) ? 1 : na, style=shape.arrowdown, location=location.absolute, color=green, size=size.large)
+plotshape((isBuySignal and inPreviousBuy) ? 1 : na, style=shape.arrowup, location=location.absolute, color=red, size=size.large)
+plotshape((isSellSignal and not inPreviousSell) ? 1 : na, style=shape.arrowdown, location=location.absolute, color=green, size=size.large, text="Sell")
+plotshape((isBuySignal and not inPreviousBuy) ? 1 : na, style=shape.arrowup, location=location.absolute, color=red, size=size.large, text="Buy")
 
 // barcolor(pos == -1 ? red: pos == 1 ? green : blue)
 plot(useSMA ? xSMA : na, color=red, title="CCI MA Slow")
 plot(useSMA ? xFMA : na, color=blue, title="CCI MA FAST")
 plot(not useSMA ? xCCI : na, color=(isSellSignal or isBuySignal) ? red : green, title="CCI Standard")
 
-if (isBuySignal)
+if (isBuySignal and not inPreviousBuy)
     strategy.close("sell")
     strategy.order("buy", strategy.long, 1, comment="buy", when=window())
 
 
-if (isSellSignal)
+if (isSellSignal and not inPreviousSell)
     strategy.close("buy")
     strategy.order("sell", strategy.short, 1, comment="sell", when=window())
+
+// Visualise price change for open positions
+bgcolor(inPreviousBuy ? green : na, transp=97)
+bgcolor(inPreviousSell ? red : na, transp=97)
