@@ -32,8 +32,8 @@ xFMA = sma(xCCI, FastMA)
 pos = 0
 pos := iff(xSMA < xFMA , 1, iff(xSMA > xFMA, -1, nz(pos[1], 0)))
 
-isSellSignal = useSMA ? crossover(xSMA, xFMA) : crossover(xCCI, upperBoundLine) 
-isBuySignal = useSMA ? crossunder(xSMA, xFMA) : crossunder(xCCI, lowerBoundLine)
+isSellSignal = useSMA ? crossunder(xSMA, xFMA) : crossunder(xCCI, upperBoundLine) 
+isBuySignal = useSMA ? crossover(xSMA, xFMA) : crossover(xCCI, lowerBoundLine)
 
 // Visualise the Opening positions
 plotshape(isSellSignal ? 1 : na, style=shape.arrowdown, location=location.absolute, color=green, text="Sell")
