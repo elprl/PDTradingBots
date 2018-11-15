@@ -3,8 +3,8 @@ study(title="CCI Scalper", shorttitle="CCI Scalper") //, overlay=false, default_
 
 FastMA = input(10, minval=1)
 SlowMA = input(20, minval=1)
-upperBoundLine = input(200.000, "CCI Upper line", type=float)
-lowerBoundLine = input(-200.000, "CCI Lower line", type=float)
+upperBoundLine = input(186.000, "CCI Upper line", type=float)
+lowerBoundLine = input(-214.000, "CCI Lower line", type=float)
 useSMA = input(false, "Use SMA with CCI", type=bool)
 trailPoints = input(140, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
@@ -21,9 +21,9 @@ start     = timestamp(FromYear, FromMonth, FromDay, 00, 00)  // backtest start w
 finish    = timestamp(ToYear, ToMonth, ToDay, 23, 59)        // backtest finish window
 window()  => time >= start and time <= finish ? true : false // create function "within window of time"
 
-hline(upperBoundLine, color=gray, linestyle=dashed)
+hline(upperBoundLine, color=orange, linestyle=dashed)
 //hline(0, color=purple, linestyle=dashed)
-hline(lowerBoundLine, color=gray, linestyle=dashed)
+hline(lowerBoundLine, color=olive, linestyle=dashed)
 
 xCCI = cci(close, 10)
 xSMA = sma(xCCI, SlowMA)
@@ -31,17 +31,17 @@ xFMA = sma(xCCI, FastMA)
 pos = 0
 pos := iff(xSMA < xFMA , 1, iff(xSMA > xFMA, -1, nz(pos[1], 0)))
 
-isSellSignal = useSMA ? crossover(xSMA, xFMA) : crossover(xCCI, upperBoundLine) 
-isBuySignal = useSMA ? crossunder(xSMA, xFMA) : crossunder(xCCI, lowerBoundLine)
+isSellSignal = useSMA ? crossunder(xSMA, xFMA) : crossunder(xCCI, upperBoundLine) 
+isBuySignal = useSMA ? crossover(xSMA, xFMA) : crossover(xCCI, lowerBoundLine)
 
 // Visualise the Opening positions
 plotshape(isSellSignal ? 1 : na, style=shape.arrowdown, location=location.absolute, color=green, text="Sell")
 plotshape(isBuySignal ? 1 : na, style=shape.arrowup, location=location.absolute, color=red, text="Buy")
 
 // barcolor(pos == -1 ? red: pos == 1 ? green : blue)
-plot(xSMA, color=red, title="CCI MA Slow")
-plot(xFMA, color=blue, title="CCI MA FAST")
-plot(xCCI, color=(isSellSignal or isBuySignal) ? red : green, title="CCI Standard")
+plot(useSMA ? xSMA : na, color=red, title="CCI MA Slow")
+plot(useSMA ? xFMA : na, color=blue, title="CCI MA FAST")
+plot(not useSMA ? xCCI : na, color=(isSellSignal or isBuySignal) ? red : green, title="CCI Standard")
 
 alertcondition(isBuySignal, title='Buy', message='Buy signal')
 alertcondition(isSellSignal, title='Sell', message='Sell signal')
