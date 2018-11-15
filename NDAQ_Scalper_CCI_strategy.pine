@@ -1,10 +1,10 @@
 //@version=3
-strategy(title="CCI Scalper", shorttitle="CCI Scalper", overlay=false, default_qty_value=1, backtest_fill_limits_assumption=1, calc_on_every_tick=true)
+strategy(title="CCI Scalper Strategy", shorttitle="CCI Scalper Strategy", overlay=false, default_qty_value=1, backtest_fill_limits_assumption=1, calc_on_every_tick=false)
 
 FastMA = input(10, minval=1)
 SlowMA = input(20, minval=1)
-upperBoundLine = input(200.000, "CCI Upper line", type=float)
-lowerBoundLine = input(-200.000, "CCI Lower line", type=float)
+upperBoundLine = input(186.000, "CCI Upper line", type=float)
+lowerBoundLine = input(-214.000, "CCI Lower line", type=float)
 useSMA = input(false, "Use SMA with CCI", type=bool)
 trailPoints = input(140, "Trail Points (in ticks)", type=integer)
 trailOffset = input(100, "Trail Offset (in ticks)", type=integer)
@@ -22,9 +22,8 @@ start     = timestamp(FromYear, FromMonth, FromDay, 00, 00)  // backtest start w
 finish    = timestamp(ToYear, ToMonth, ToDay, 23, 59)        // backtest finish window
 window()  => time >= start and time <= finish ? true : false // create function "within window of time"
 
-hline(upperBoundLine, color=gray, linestyle=dashed)
-//hline(0, color=purple, linestyle=dashed)
-hline(lowerBoundLine, color=gray, linestyle=dashed)
+hline(upperBoundLine, color=orange, linestyle=dashed)
+hline(lowerBoundLine, color=olive, linestyle=dashed)
 
 xCCI = cci(close, 10)
 xSMA = sma(xCCI, SlowMA)
@@ -40,18 +39,15 @@ plotshape(isSellSignal ? 1 : na, style=shape.arrowdown, location=location.absolu
 plotshape(isBuySignal ? 1 : na, style=shape.arrowup, location=location.absolute, color=red, text="Buy")
 
 // barcolor(pos == -1 ? red: pos == 1 ? green : blue)
-plot(xSMA, color=red, title="CCI MA Slow")
-plot(xFMA, color=blue, title="CCI MA FAST")
-// plot(xCCI, color=(isSellSignal or isBuySignal) ? red : green, title="CCI Standard")
-plot(xCCI, color=(xCCI > upperBoundLine or xCCI < lowerBoundLine) ? red : green, title="CCI Standard")
+plot(useSMA ? xSMA : na, color=red, title="CCI MA Slow")
+plot(useSMA ? xFMA : na, color=blue, title="CCI MA FAST")
+plot(not useSMA ? xCCI : na, color=(isSellSignal or isBuySignal) ? red : green, title="CCI Standard")
 
 if (isBuySignal)
     strategy.close("sell")
     strategy.order("buy", strategy.long, 1, comment="buy", when=window())
-    strategy.exit("Trailing Stop (buy)", "buy", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
 
 
 if (isSellSignal)
     strategy.close("buy")
     strategy.order("sell", strategy.short, 1, comment="sell", when=window())
-    strategy.exit("Trailing Stop (sell)", "sell", trail_points= trailPoints, trail_offset= trailOffset, when= testType == 'Trail Points' and window())
